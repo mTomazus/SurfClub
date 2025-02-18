@@ -2,8 +2,8 @@
     <div id="slide-nav">
         <ul auto-populate="true"></ul>
         <div>
-            <?= anchor('account', '<i class="fa fa-user"></i>') ?>
-            <?= anchor('logout', '<i class="fa fa-sign-out"></i>') ?>
+            <?= anchor('members', '<i class="fa fa-user"></i>') ?>
+            <?= anchor('members/logout', '<i class="fa fa-sign-out"></i>') ?>
         </div>
     </div>
     <div class="logo-pic">

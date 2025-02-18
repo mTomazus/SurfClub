@@ -1,14 +1,19 @@
 :root {
   --primary: #4682b4;
   --primary-dark: #38678f;
+  --gradient: linear-gradient(to right, #2f78a8, #114161);
   --primary-darker: #294d6b;
   --primary-color: #fff;
   --secondary: #ff0000;
   --border: #c5c5c5;
   --alt: #fff;
   --modal-margin-top: 12vh;
+  --clr-light: #f2f3f4f5;
+  --clr-dark: #555;
+  --clr-primary:#4682b4;
+  --clr-light-15:#ffffff30;
+  --clr-primary-50:#38678f80;
 }
-
 body {
   font-family: Tahoma, Geneva, sans-serif;
   margin: 0;
@@ -52,6 +57,7 @@ input[type="text"],
 input[type="search"],
 input[type="number"],
 input[type="email"],
+input[type="tel"],
 input[type="password"],
 select,
 textarea {
@@ -68,6 +74,7 @@ input[type="search"]:focus,
 input[type="number"]:focus,
 textarea:focus,
 input[type="email"]:focus,
+input[type="tel"]:focus,
 input[type="password"]:focus,
 select:focus {
   border: 1px solid var(--primary);
@@ -78,6 +85,7 @@ input[type="text"],
 input[type="search"],
 input[type="number"],
 input[type="email"],
+input[type="tel"],
 input[type="password"],
 button,
 textarea,

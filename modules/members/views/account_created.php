@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container-xs">
     <h1>Account Created Succesfully!</h1>
     <p  class="text-center">Welcome aboard! </p>
     <div class="text-center">

@@ -1,38 +1,40 @@
-<div class="newswire">
-    <div class="newswire-article-grid">
-        <div>
-            <h1><?= $article_headline ?></h1>
-            <div class="timestamp"><span class="newswire-highlight">&#9679;</span> 
-                Published <?= date('l jS F Y', strtotime($date_and_time)) ?></div>
-                <?php
-                if ($picture !== '') {
-                ?><div><img src="<?= $picture_path ?>" alt="<?= $article_headline ?>"></div><?php
-                }
-                ?>
-            <div class="article-body">
-                <?= nl2br($article_body) ?>
-            </div>
-        </div>
-        <div>
-            <h3 class="other-news">Other News</h3>
-            <div class="other-news-grid">
-                <?php
-                foreach($articles as $article) {
-                ?>
-                <div>
-                    <div class="timestamp">
-                        <span class="newswire-highlight">&#9679;</span> 
-                        <?= date('jS M Y', strtotime($article->date_and_time)) ?>
-                    </div>
-                    <div><?= anchor($article->article_url, $article->article_headline) ?></div>
+<div class="container-lg">
+    <div class="newswire">
+        <div class="newswire-article-grid">
+            <div>
+                <h1><?= $article_headline ?></h1>
+                <div class="timestamp"><span class="newswire-highlight">&#9679;</span> 
+                    Published <?= date('l jS F Y', strtotime($date_and_time)) ?></div>
+                    <?php
+                    if ($picture !== '') {
+                    ?><div><img src="<?= $picture_path ?>" alt="<?= $article_headline ?>"></div><?php
+                    }
+                    ?>
+                <div class="article-body">
+                    <?= nl2br($article_body) ?>
                 </div>
-                <?php
-                }
-                ?>
+            </div>
+            <div>
+                <h3 class="other-news">Other News</h3>
+                <div class="other-news-grid">
+                    <?php
+                    foreach($articles as $article) {
+                    ?>
+                    <div>
+                        <div class="timestamp">
+                            <span class="newswire-highlight">&#9679;</span> 
+                            <?= date('jS M Y', strtotime($article->date_and_time)) ?>
+                        </div>
+                        <div><?= anchor($article->article_url, $article->article_headline) ?></div>
+                    </div>
+                    <?php
+                    }
+                    ?>
+                </div>
             </div>
         </div>
     </div>
-</div>
+                </div>
 <link rel="stylesheet" href="news_module/css/newswire.css"> 
 <script>
 var youtubeVideos = document.getElementsByClassName("youtube-video");

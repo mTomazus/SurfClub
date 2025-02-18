@@ -25,6 +25,7 @@
         <div class="card-body">
             <div><span>Date Created</span><span><?= date('l jS F Y \a\t H:i',  $date_created) ?></span></div>
             <div><span>Name</span><span><?= $name ?></span></div>
+            <div><span>Phone</span><span><?= $phone ?></span></div>
             <div><span>Email Address</span><span><?= $email_address ?></span></div>
             <div>
                 <b>Message</b>

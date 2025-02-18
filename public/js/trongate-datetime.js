@@ -1,5 +1,5 @@
 let trongateDateTimeObj = {
-  weekStartsOn: 0,
+  weekStartsOn: 1,
   activePopUp: {},
   activeType: "",
   datePickerCalendar: {},
@@ -9,11 +9,11 @@ let trongateDateTimeObj = {
   todayDate: new Date(),
   parsedInputDate: null,
   thisDateFormat: "",
-  thisLocaleString: "",
+  thisLocaleString: "lt-LT",
   originalInputValue: "",
   datePickerTblTopRow: {},
-  dayNames: [],
-  monthNames: [],
+  dayNames: ["pirmadienis", "antradienis", "trečiadienis", "ketvirtadienis", "penktadienis", "šeštadienis", "sekmadienis"],
+  monthNames: ["sausis", "vasaris", "kovas", "balandis", "gegužė", "birželis", "liepa", "rugpjūtis", "rugsėjis", "spalis", "lapkritis", "gruodis"],
 };
 
 // *** Trongate Time Date Initialisation START ***

@@ -1,7 +1,7 @@
-<div class="meganav-links justify-content-around">
-    <div class="container-xl flex-column d-flex justify-content-evenly" style="font-family: 'Alegreya';font-weight: 900;font-size: medium; color: white;">
-        <ul class="d-flex" style="justify-content:space-around;border-bottom: 2px solid white;">
-            <li class="col" style="border-right: 2px solid white;">
+<div class="meganav-links">
+    <div class="container-xl">
+        <section>
+            <li class="col">
                 <span>Pagrindiniai</span>
                 <ul>
                     <li><a href="pamokos/">Pamokos</a></li>
@@ -12,30 +12,31 @@
                     <li><a href="burelis/">Būrelis</a></li>
                 </ul>
             </li>
-            <li class="col" style="border-right: 2px solid white;">
+            <li class="col">
                 <span>Kiti</span>
                 <ul>
                     <li><a href="skelbimai/">Skelbimai</a></li>
-                    <li><a href="prognozes/">Prognozės</a></li>
+                    <li><a href="test/port/">Orai</a></li>
                     <li><a href="webcamai/">Webcamai</a></li>
                     <li><a href="straipsniai/">Straipsniai</a></li>
-                    <li><a href="#">Nuorodos</a></li>
+                    <li><a href="#">Įmonėms</a></li>
                     <li><a href="members/login/">Login</a></li>
 
                 </ul>
             </li>
-            <li class="col" style="">
+            <li class="col">
                 <span>Apie mus</span>
                 <ul>
-                    <li><a href="contacts/">Kontaktai</a></li>
+                    <li><a href="kontaktai/">Kontaktai</a></li>
+                    <li><a href="#">Komanda</a></li>
                     <li><a href="karjera/">Karjera</a></li>
                     <li><a href="parama/">Parama</a></li>
-                    <li><a href="#">Įmonėms</a></li>
+                    <li><a href="#">Nuorodos</a></li>
                     <li><a href="#">Ataskaitos</a></li>
                 </ul>
             </li>
-        </ul>
-        <ul class="" style="display:flex; justify-content:space-around;">
+        </section>
+        <section>
             <li class="col">            
                 <span>Naujienos</span>
             </li>
@@ -59,16 +60,12 @@
                     </a>
                 </ul>
             </li>
-        </ul>
-        <div class="container mb-3 pt-3" style="border-top: 2px solid">
-            <div class="d-flex justify-content-around">
+        </section>
+        <section>
                 <a href="https://www.instagram.com/banglente/" target=“_blank”><img src="images/in-icon.png" alt="instagram button"></a>
                 <a href="https://www.facebook.com/banglente" target=“_blank”><img src="images/fb-icon.png" alt="facebook button"></a>
                 <a href="https://www.youtube.com/channel/UCbcobM7kKzfznOQEpIrZJqA" target=“_blank”><img src="images/yt-icon.png" alt="youtube button"></a>
                 <a href="https://t.me/LT_Serfing" target=“_blank”><img src="images/tg-icon.png" alt="telegram button"></a>
-            </div>
-        </div>
-        
-
+        </section>
     </div>
 </div>

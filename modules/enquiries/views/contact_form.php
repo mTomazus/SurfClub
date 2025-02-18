@@ -1,29 +1,29 @@
 <section class="container contact-us">
     <h1>Get In Touch</h1>
     <?php
-    validation_errors();
-    echo form_open($form_location);
-    echo form_label('Your Name');
-    $input_attr['placeholder'] = 'Enter your name here';
+    $form_attr['id'] = 'contact-form';
+    $form_attr['class'] = 'highlight-errors container';
+    echo form_open($form_location, $form_attr);
+
+    $input_attr['placeholder'] = 'Įveskite savo vardą';
     $input_attr['autocomplete'] = 'off';
+    validation_errors('name');
     echo form_input('name', $name, $input_attr);
 
-    echo form_label('Your Email Address');
-    $input_attr['placeholder'] = 'Enter your email address here';
+    $input_attr['placeholder'] = 'Įveskite savo tel. numerį';
+    validation_errors('phone');
+    echo form_input('phone', $phone, $input_attr);
+
+    $input_attr['placeholder'] = 'Įveskite savo el. paštą';
+    validation_errors('email_address');
     echo form_email('email_address', $email_address, $input_attr);
 
-    echo form_label('Your Message');
-    $input_attr['placeholder'] = 'Use this space to enter your message';
-    $input_attr['rows'] = 5;
+    $input_attr['placeholder'] = 'Čia rašykite savo užklausimą ar žinutę';
+    $input_attr['rows'] = 3;
     echo form_textarea('message', $message, $input_attr);
 
-    echo '<p>Prove you\'re human by answering the question below!</p>';
-    echo form_label($question);
-    echo form_dropdown('answer', $options, $answer);
-
     echo form_submit('submit', 'Submit');
-    echo anchor(BASE_URL, 'Cancel', array('class' => 'button alt'));
-
+    flashdata();
     echo form_close();
     ?>
 </section>

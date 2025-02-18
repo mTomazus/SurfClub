@@ -112,7 +112,7 @@ footer a {
   top: 0;
   left: 0;
   position: fixed;
-  transition: 0.1s;
+  transition: 1s;
   z-index: -1;
 }
 

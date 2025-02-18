@@ -64,12 +64,22 @@
                 return true;
             }
             return false;
+        },
+        parseUrlWithPlaceholders(url, element) {
+            return url.replace(/\$\{([^}]+)\}/g, (match, p1) => {
+                if (p1 === 'this.value') {
+                    return element.value;
+                }
+                // Add more conditions here for other placeholders if needed
+                return match; // Return unchanged if no match
+            });
         }
     };
 
     const Http = {
         setupHttpRequest(element, httpMethodAttribute) {
-            const targetUrl = element.getAttribute(httpMethodAttribute);
+            let targetUrl = element.getAttribute(httpMethodAttribute);
+            targetUrl = Utils.parseUrlWithPlaceholders(targetUrl, element);
             const requestType = httpMethodAttribute.replace('mx-', '').toUpperCase();
             Dom.attemptActivateLoader(element);
             
@@ -1043,7 +1053,14 @@
             ) {
                 Main.mxSubmitForm(element, triggerEvent, attribute);
             } else {
-                Main.initInvokeHttpRequest(element, attribute);
+                // Special handling for select elements with mx-get and mx-trigger="change"
+                if (element.tagName.toLowerCase() === 'select' && 
+                    attribute === 'mx-get' && 
+                    element.getAttribute('mx-trigger') === 'change') {
+                    Main.initInvokeHttpRequest(element, attribute);
+                } else {
+                    Main.initInvokeHttpRequest(element, attribute);
+                }
             }
         },
 

@@ -7,8 +7,8 @@ class Enquiries extends Trongate {
 
     function index() {
         $data = $this->_get_data_from_post();
-        $data['question'] = $this->_get_question();
-        $data['options'] = $this->_get_possible_answers();
+        // $data['question'] = $this->_get_question();
+        // $data['options'] = $this->_get_possible_answers();
         $data['form_location'] = 'enquiries/submit'; 
         $data['view_module'] = 'enquiries';
         $data['view_file'] = 'contact_form';
@@ -20,22 +20,18 @@ class Enquiries extends Trongate {
         $question = 'What is the capital of France?';
         return $question;
     }
-
     function _get_possible_answers() {
         $answer = post('answer', true);
         settype($answer, 'int');
-
         if ($answer == 0) {
             $answers[''] = 'Select...';
         }
-        
         $answers[1] = 'Glasgow';
         $answers[2] = 'London';
         $answers[3] = 'New York';
         $answers[4] = 'Paris';
         return $answers;
     }
-
     function _get_correct_answer() {
         $correct_answer = 4;
         return $correct_answer;
@@ -56,9 +52,11 @@ class Enquiries extends Trongate {
             $data['headline'] = 'Search Results';
             $searchphrase = trim($_GET['searchphrase']);
             $params['name'] = '%'.$searchphrase.'%';
+            $params['phone'] = '%'.$searchphrase.'%';
             $params['email_address'] = '%'.$searchphrase.'%';
             $sql = 'select * from enquiries
             WHERE name LIKE :name
+            OR phone LIKE :phone
             OR email_address LIKE :email_address
             ORDER BY date_created desc';
             $all_rows = $this->model->query_bind($sql, $params, 'object');
@@ -127,7 +125,6 @@ class Enquiries extends Trongate {
                 $rows[] = $row;
             }
         }
-
         return $rows;
     }
 
@@ -138,9 +135,10 @@ class Enquiries extends Trongate {
         if ($submit == 'Submit') {
 
             $this->validation_helper->set_rules('name', 'Name', 'required|min_length[2]|max_length[255]');
+            $this->validation_helper->set_rules('phone', 'Phone Number', 'required|min_length[5]|max_length[15]');
             $this->validation_helper->set_rules('email_address', 'Email Address', 'required|min_length[5]|max_length[255]|valid_email_address|valid_email');
             $this->validation_helper->set_rules('message', 'Message', 'required|min_length[2]');
-            $this->validation_helper->set_rules('answer', 'prove you are human answer', 'required|callback_answer_check');
+            // $this->validation_helper->set_rules('answer', 'prove you are human answer', 'required|callback_answer_check');
 
             $result = $this->validation_helper->run();
 
@@ -148,20 +146,21 @@ class Enquiries extends Trongate {
                 $data = $this->_get_data_from_post();
                 $data['opened'] = ($data['opened'] == 1 ? 1 : 0);
                 $data['date_created'] = time();
-                unset($data['answer']);
+                // unset($data['answer']);
 
                 //insert the new record
                 $update_id = $this->model->insert($data, 'enquiries');
-                $finish_url = 'enquiries/thankyou';
                 
+                //set the flashdata
+                $flash_msg = '<div class="success flash-msg">Išsiųsta sėkmingai!</div>';
                 set_flashdata($flash_msg);
-                redirect($finish_url);
 
             } else {
                 //form submission error
-                $this->index();
+                $flash_msg = '<div class="danger flash-msg">Nepavyko išsiųsti!</div>';
+                set_flashdata($flash_msg);
             }
-
+            redirect($_SERVER["HTTP_REFERER"]);
         }
 
     }
@@ -253,10 +252,11 @@ class Enquiries extends Trongate {
 
     function _get_data_from_post() {
         $data['name'] = post('name', true);
+        $data['phone'] = post('phone', true);
         $data['email_address'] = post('email_address', true);
         $data['message'] = post('message', true);
         $data['opened'] = post('opened', true);   
-        $data['answer'] = post('answer', true);     
+        // $data['answer'] = post('answer', true);     
         return $data;
     }
 

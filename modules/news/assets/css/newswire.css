@@ -2,7 +2,7 @@
 
 :root {
   --newswire-primary-bg: #39668c;
-  --newswire-text-color: #333;
+  --newswire-text-color: #ffffff;
   --newswire-highlight: #f5d429;
 }
 
@@ -26,7 +26,7 @@
 .strikethrough-headline-rhs > div,
 .newswire-text-cards-grid > div,
 .newswire-search-results h3 {
-  font-family: "Work Sans", sans-serif;
+  font-family: "alegreya", sans-serif;
 }
 
 .newswire-search-results h3 {
@@ -41,7 +41,11 @@
 }
 
 .newswire h1 {
-  font-size: 36px;
+  font-size: 30px!important;
+  color: white;
+  text-transform: uppercase;
+  font-family: PT Serif;
+  text-shadow: 1px 1px 3px black;
 }
 
 .newswire h4 {
@@ -118,6 +122,8 @@
 #marquee {
   border: 1px #eee solid;
   display: flex;
+  margin:0 5px;
+  color:black;
   align-items: center;
 }
 
@@ -267,6 +273,7 @@
 
 .newswire .timestamp {
   margin-top: 12px;
+  color: var(--newswire-text-color);
   font-size: 0.9em;
   text-transform: uppercase;
   padding-bottom: 4px;

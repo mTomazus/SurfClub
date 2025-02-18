@@ -1,0 +1,1 @@
+[{"module_name":"lessons","record_name_singular":"lesson","record_name_plural":"lessons","identifier_column":"name"},{"module_name":"lesson_schedules","record_name_singular":"lesson_schedule","record_name_plural":"lesson schedules","identifier_column":"lesson_id"},{"relationship_type":"one to many"}]

@@ -7,7 +7,7 @@ if (count($rows)>0) { ?>
     <table id="results-tbl">
         <thead>
             <tr>
-                <th colspan="4">
+                <th colspan="5">
                     <div>
                         <div><?php
                         echo form_open('enquiries/manage/1/', array("method" => "get"));
@@ -27,6 +27,7 @@ if (count($rows)>0) { ?>
                 <th>Name</th>
                 <th>Email Address</th>
                 <th>Date Sent</th>
+                <th>Message</th>
                 <th style="width: 20px;">Action</th>            
             </tr>
         </thead>
@@ -46,8 +47,9 @@ if (count($rows)>0) { ?>
             <tr>
                 <td><?= $row_icon.' '.$row->name ?></td>
                 <td><?= $row->email_address ?></td>
-                <td><?= date('l jS F Y \a\t H:i',  $row->date_created) ?></td>
-                <td><?= anchor('enquiries/show/'.$row->id, 'View', $attr) ?></td>        
+                <td><?= date('Y.m.d H:i',  $row->date_created) ?></td>
+                <td><?= substr($row->message, 0, 50) . "..." ?></td>
+                <td><?= anchor('enquiries/show/'.$row->id, 'View', $attr) ?>      
             </tr>
             <?php
             }

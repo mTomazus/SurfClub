@@ -181,6 +181,7 @@ class Trongate_pages extends Trongate {
             OR page_body LIKE :page_body
             ORDER BY date_created desc';
             $all_rows = $this->model->query_bind($sql, $params, 'object');
+
         } else {
             $data['headline'] = 'Manage Webpages';
             $all_rows = $this->model->get('id');
@@ -196,7 +197,7 @@ class Trongate_pages extends Trongate {
 
         $data['form_location'] = str_replace('/manage', '/submit', current_url());
         $data['rows'] = $this->reduce_rows($all_rows);
-        $data['rows'] = $this->add_publilc_urls($data['rows']);
+        $data['rows'] = $this->add_public_urls($data['rows']);
         //add author usernames
         $data['rows'] = $this->add_author_usernames($data['rows']);
         $data['token'] = $token;
@@ -205,6 +206,7 @@ class Trongate_pages extends Trongate {
         $data['view_module'] = 'trongate_pages';
         $data['view_file'] = 'manage';
         $this->template($this->admin_template, $data);
+
     }
 
     /**
@@ -1216,7 +1218,7 @@ class Trongate_pages extends Trongate {
      * @param array $rows An array of website page objects.
      * @return array The modified array of website page objects, each with a 'webpage_url_public' property.
      */
-    private function add_publilc_urls(array $rows): array {
+    private function add_public_urls(array $rows): array {
         foreach ($rows as $key => $value) {
             $url_string = $value->url_string;
             $module_exists = $this->module_exists($url_string);

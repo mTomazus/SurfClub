@@ -2,7 +2,7 @@
 
 <div id="page-upper"></div>
 
-<form class="container-xxs" mx-post="<?= BASE_URL ?>coupons/submit_new_coupon" 
+<form id="coupon-form" class="container-xxs" mx-post="coupons/submit_new_coupon" 
                             mx-target="#page-upper"
                             mx-on-success="#result">
     <label for="">Coupon Type</label>

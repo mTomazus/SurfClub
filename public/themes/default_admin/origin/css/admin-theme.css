@@ -45,6 +45,7 @@ header {
 header a {
     color: lightskyblue;
     transition: color 0.5s ease;
+    font-size: 14px;
 }
 header a:hover {
     color: white;

@@ -64,7 +64,8 @@
     "url_segments": "api/create/enquiries",
     "request_type": "POST",
     "description": "Insert database record",
-    "enableParams": true
+    "enableParams": true,
+    "authorization": "*"
   },
   "Insert Batch": {
     "url_segments": "api/batch/enquiries",
