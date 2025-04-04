@@ -8,4 +8,5 @@
     <li><?= anchor('lesson_users/manage', 'Manage Lesson Users') ?></li>
     <li><?= anchor('lesson_registrations/manage', 'Manage Lesson Registrations') ?></li>
     <li><?= anchor('camps/manage', 'Manage Camps') ?></li>
+    <li><?= anchor('products/manage', 'Manage Products') ?></li>
 </ul>

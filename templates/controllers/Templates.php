@@ -15,6 +15,14 @@ class Templates extends Trongate {
         load('members_area', $data);
     }
 
+    function shop_area($data): void {
+        load('shop_area', $data);
+    }
+
+    function judges_area($data): void {
+        load('judges_area', $data);
+    }
+
     /**
      * Loads the 'error_404' view with provided data.
      *

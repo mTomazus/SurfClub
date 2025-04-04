@@ -6,69 +6,73 @@
             <source src="videos/web-camp.mp4" type="video/mp4">
             Your browser does not support the video tag.
     </video>
-    <section>
-        <h2>2025</h2>
-        <h1>banglenčių stovykla</h1>
-        <h3>Jau devintus metus organizuojame vaikų vasaros poilsį prie jūros.</h3>
-        <button class="btn-reg lg"
-                mx-get="camps/forma"
-                mx-build-modal='{
-                    "id": "registracijos-forma",
-                    "modalHeading": "Stovyklos Registracija",
-                    "width": "460px"
-                }'>
-            REGISTRACIJA
-        </button>
-        <div>   
-            <h4>Sužinosime banglenčių sporto istoriją bei teoriją</h4>
-            <h4>Išmoksime panaudoti šias žinias praktikoje</h4>
-            <h4>Tobulinsime banglenčių sporto įgudžius</h4>
-            <h4>Aktyviai praleisime atostogas gryname ore</h4>
-        </div>
-    </section>
+    <div>
+        <h1>banglenčių</h1>
+        <h1>stovykla</h1>
+        <h2 class="blink metai">2025</h2>
+    </div>
+    <h3>Jau devintus metus organizuojame vaikų vasaros poilsį prie jūros.</h3>
+    <button class="btn-reg lg"
+            mx-get="camps/forma"
+            mx-select="form"
+            mx-build-modal='{
+                "id": "registracijos-forma",
+                "modalHeading": "Stovyklos Registracija",
+                "width": "460px"
+            }'>
+        REGISTRACIJA
+    </button>
+    <div>   
+        <h4>Sužinosime banglenčių sporto istoriją bei teoriją</h4>
+        <h4>Išmoksime panaudoti šias žinias praktikoje</h4>
+        <h4>Tobulinsime banglenčių sporto įgudžius</h4>
+        <h4>Aktyviai praleisime atostogas gryname ore</h4>
+    </div>
 </div>
 
 <!---------------             HERO 3             ------------------------>
 <div class="hero-3 hero">
-    <h2>Dienos veiklos</h2>
-    <div>
+    <section style="grid-column:3">
+        <h2>Veiklos</h2>     
+    </section>
+    <div id="veiklos">
         <section>
-            <img src="images/stovykla/banglente.jpeg" alt="banglentes">
+            <img src="images/stovykla/banglente.webp" alt="banglentes">
             <article>
                 <p>Banglentės</p>
                 <h4>KASDIEN BANGLENČIŲ SPORTO TEORINIAI IR PRAKTINIAI UŽSIĖMIMAI.</h4>
             </article>
         </section>
         <section>
-            <img src="images/stovykla/riedlente.jpeg" alt="riedlentes">
+            <img src="images/stovykla/riedlente.webp" alt="riedlentes">
             <article>
                 <p>Riedlentės</p>
                 <h4>Surfskate riedlenčių praktiniai mokymai ir teniruotės</h4>
             </article>
         </section>
         <section>
-            <img src="images/stovykla/teorija.jpeg" alt="teorija">
+            <img src="images/stovykla/teorija.webp" alt="teorija">
             <article>
                 <p>Teorija</p>
                 <h4>Apie saugumą vandenyje ir tinkamą elgesį prie jo, video peržiūros</h4>
             </article>
         </section>
         <section>
-            <img src="images/stovykla/zaidimai.jpeg" alt="zaidimai">
+            <img src="images/stovykla/zaidimai.webp" alt="zaidimai">
             <article>
                 <p>Žaidimai</p>
                 <h4>Paplūdymio ir stalo žaidimai: tinklinis, kvadratas, futbolas</h4>
             </article>
         </section>
         <section>
-            <img src="images/stovykla/vaiksciojimai.jpeg" alt="pasivaiksciojimai">
+            <img src="images/stovykla/vaiksciojimai.webp" alt="pasivaiksciojimai">
             <article>
                 <p>Pasivaikščiojimai</p>
                 <h4>ekskursijos paplūdimiu iki gelbėtojų ir Melnragės mišku</h4>
             </article>
         </section>
     </div>
-    <button href="incoming/programa.pdf" target="_blank"><h3>PRELIMINARI PROGRAMA</h3></button>
+    <button href="docs/programa.pdf" target="_blank"><p><i class="fa fa-file" style="margin-right: 2rem"></i>PROGRAMA</p></button>
 </div>
 <!---------------             HERO 4             ------------------------>
 <div class="hero-4 hero">
@@ -77,29 +81,34 @@
         Your browser does not support the video tag.
     </video>
     <!-- ka suteiks stovykla-->
-    <section>
-        <h2>Stovykla suteiks</h2>
-        <div>
-            <h3>Maitinimą du kartus:</h3>
-            <p>pietūs atvežti iš miesto valgyklos;</p>
-            <p>užkandžiams sausainiai ir įvairūs vaisiai.</p>
-            <h3>Visą reikalingą sporto inventorių:</h3>
-            <p>įvairaus dydžio mokomąsias banglentes;</p>
-            <p>šiltus hidrokostiumus ir esant reikalui batus;</p>
-            <p>"carver", "smoothstar" ir "classic" tipo riedlentes;</p>
-        </div>
+     <section>
+        <h2>Suteiksime</h2>
     </section>
+    <div class="hidden">
+        <h3>Neišdildomus įspūdžius</h3>
+    </div>
+    <div class="hidden">
+        <h3>Maitinimą</h3>
+        <p>karšti pietūs</p>
+        <p>užkandžiai ir vaisiai.</p>
+    </div>
+    <div class="hidden">
+        <h3>Inventorių:</h3>
+        <p>mokomąsias banglentes;</p>
+        <p>šiltus hidrokostiumus;</p>
+        <p>įvairias riedlentes;</p>
+    </div>
 </div>
 <!---------------             HERO 5             ------------------------>
-<div class="hero-5 hero container">
+<div class="hero">
     <section>
         <h2>PASIEKIMAI</h2>
     </section>
     <div class="photos">
-        <img src="images/stovykla/LTU_Team_1_small.jpeg" alt="isa surf 1">
-        <img src="images/stovykla/LTU_Team_2_small.jpeg" alt="isa surf 2">
-        <img src="images/stovykla/LTU_Antanas_small.jpeg" alt="antanas">
-        <img src="images/stovykla/LTU_Goda_small.jpeg" alt="goda">
+        <img src="images/stovykla/LTU_Team_1_small.webp" alt="isa surf 1">
+        <img src="images/stovykla/LTU_Team_2_small.webp" alt="isa surf 2">
+        <img src="images/stovykla/LTU_Antanas_small.webp" alt="antanas">
+        <img src="images/stovykla/LTU_Goda_small.webp" alt="goda">
     </div>
     <section>
         <p>Jaunieji stovyklos auklėtiniai dalyvauja tiek Lietuvos/Latvijos tiek 
@@ -110,11 +119,11 @@
     </section>
 </div>
 <!---------------             HERO 6             ------------------------>
-<div class="hero hero-6 container-xxl">
-<h2>Mūsų komanda</h2>
+<div class="hero hero-6">
+<h2>komanda</h2>
     <div class="team">
         <div class="team-card">
-            <img src="images/komanda/tomas.jpeg" alt="tomas">
+            <img src="images/komanda/tomas.webp" alt="tomas">
             <div class="team-article">
                 <p>Tomas</p>
                 <article>Klubo įkūrėjas ir direktorius</article>
@@ -123,7 +132,7 @@
             </div>
         </div>
         <div class="team-card">
-            <img src="images/komanda/evaldas.jpeg" alt="eveldas">
+            <img src="images/komanda/evaldas.webp" alt="eveldas">
             <div class="team-article">
                 <p>Evaldas</p>
                 <article>Sporto instruktorius</article>
@@ -132,7 +141,7 @@
             </div>
         </div>
         <div class="team-card">
-            <img src="images/komanda/laurynas.jpeg" alt="laurynas">
+            <img src="images/komanda/laurynas.webp" alt="laurynas">
             <div class="team-article">
                 <p>Laurynas</p>
                 <article>Storto instruktorius</article>
@@ -141,4 +150,39 @@
             </div>
         </div>
     </div>
+    <article>
+        <p>Praleisim laiką gamtoje su vaikais.</p>
+        <p>Išmokysim saugiai jaustis šalia vandens.</p>
+        <p>Užtikrinsime saugią aplinką veikloms.</p>
+        <p>Ugdysim drausmę ir savarankiškumą.</p>
+    </article>
 </div>
+<div class="hero hero 7">
+    <article>
+        <h2>Informacija</h2>
+        <p>Stovykla organizuojama nuo birželio vidurio.</p>
+        <p>Grupės sudaromos iš 8-10 moksleivių.</p>
+        <p>Pamaina trunka 5 dienas (nuo 9:00 iki 17:00).</p>
+    </article>
+    <article>
+        <h2>Kaip registruotis</h2>
+        <p>Užpildyti registracijos formą;</p>
+        <p>Atlikus avansini 100 Eur pavedimą.</p>
+        <button class="btn-reg lg"
+            mx-get="camps/forma"
+            mx-select="form"
+            mx-build-modal='{
+                "id": "registracijos-forma",
+                "modalHeading": "Stovyklos Registracija",
+                "width": "460px"
+            }'>
+        FORMA
+    </button>
+    </article>
+    <article>
+        <p>Neatvykus į stovyklą avansas negrąžinamas.</p>
+        <p>Visada mielai atsakysime į visus jums kylančius klausimus telefonu.</p>
+    </article>
+    <h2 class="blink">KAINA 275€.</h2>
+</div>
+<script src=<?= htmlspecialchars("welcome_module/js/scroll-animate.js") ?>></script>

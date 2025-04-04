@@ -12,7 +12,8 @@
 
 	</div>
 	
-	<script src="js/app.js"></script>
+	<script src="<?= BASE_URL ?>js/trongate-mx.js"></script>
+	<script src="<?= BASE_URL ?>js/app.js"></script>
 
 	<style>
 		body {

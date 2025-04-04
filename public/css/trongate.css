@@ -110,6 +110,10 @@ label {
   text-align: left;
 }
 
+select {
+  height:39px;
+}
+
 label span {
   color: green;
 }
@@ -492,8 +496,8 @@ div.modal-body p.text-center {
 }
 
 .form-field-validation-error {
-  border: 3px #ff0000 solid !important;
-  background-color: #ff000011 !important;
+  border: 3px #ff0000 solid;
+  background-color: #ff000011;
 }
 
 .validation-error-alert {

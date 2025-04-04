@@ -15,7 +15,7 @@
                 </div>
             </div>
             <div>
-                <h3 class="other-news">Other News</h3>
+                <h3 class="other-news">Kitos žinios</h3>
                 <div class="other-news-grid">
                     <?php
                     foreach($articles as $article) {

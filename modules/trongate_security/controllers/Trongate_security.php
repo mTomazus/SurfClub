@@ -15,6 +15,10 @@ class Trongate_security extends Trongate {
                     $this->module('members');
                     $token = $this->members->_make_sure_allowed();
             break;
+            case 'judges area':
+                    $this->module('competitions');
+                    $token = $this->competitions->_make_sure_allowed();
+            break;
             default:
                 $this->module('trongate_administrators');
                 $token = $this->trongate_administrators->_make_sure_allowed();

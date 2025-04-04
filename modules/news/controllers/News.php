@@ -72,17 +72,6 @@ class News extends Trongate {
         return $articles;
     }
 
-    // Pakeiciau picture path truputi
-
-    //function _add_picture_paths($articles) {
-    //    foreach($articles as $key => $value) {
-    //        $picture_path = BASE_URL.segment(1).'_module/images/'.segment(1).'_pics/'.$value->id.'/'.$value->picture;
-    //        $articles[$key]->picture_path = $picture_path;
-    //        $articles[$key]->article_url = BASE_URL.'news/display/'.$value->code.'/'.$value->url_string;
-    //    }
-    //    return $articles;
-    //}
-
     function _build_headlines_json($articles, $skip) {
         $headlines_array = [];
         $counter = 0;

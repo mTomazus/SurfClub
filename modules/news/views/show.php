@@ -37,7 +37,7 @@
             </div>            
         </div>
     </div>
-        <div class="card">
+    <div class="card">
         <div class="card-heading">
             Picture
         </div>

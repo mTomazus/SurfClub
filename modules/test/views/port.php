@@ -13,12 +13,16 @@
         </div>
 
         <div class="server-response">
-            <h2>Temperatūra</h2>
+            <h2>Oro temperatūra</h2>
             <p><span id="result3"></span><span class="speed"> °C</span></p>
+        </div>
+
+        <div class="server-response">
+            <h2>Vandens temperatūra</h2>
+            <p><span id="result4"></span><span class="speed"><?= out($vanduo) ?> °C</span></p>
         </div>
     </div>
 </div>
-
 
 <style>
     h1, h2, h3, span {
@@ -29,7 +33,7 @@
 
     .server-response {
         padding:1rem;
-        margin:1.5rem auto;
+        border-bottom: 2px solid white;
         text-align:center;
     }
     h2 {

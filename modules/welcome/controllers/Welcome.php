@@ -11,6 +11,21 @@ class Welcome extends Trongate {
 		$data['view_file'] = 'welcome';
 		$this->template('public', $data);
 	}
+	public function politika(): void {
+		$data['view_module'] = 'welcome';
+		$data['view_file'] = 'privatumo_politika';
+		$this->template('public', $data);
+	}
+	public function taisykles(): void {
+		$data['view_module'] = 'welcome';
+		$data['view_file'] = 'puslapio_taisykles';
+		$this->template('public', $data);
+	}
+	public function grazinimas(): void {
+		$data['view_module'] = 'welcome';
+		$data['view_file'] = 'prekiu_grazinimas';
+		$this->template('public', $data);
+	}
 	public function kontaktai(): void {
 		$data['view_module'] = 'welcome';
 		$data['view_file'] = 'kontaktai';
@@ -22,12 +37,18 @@ class Welcome extends Trongate {
 		$this->template('public', $data);
 	}
 	public function index(): void {
-		$this->module('trongate_pages');
-		$this->trongate_pages->display();
+		$data['view_module'] = 'welcome';
+		$data['view_file'] = 'stovykla';
+		$this->template('public', $data);
 	}
 	public function varzybos(): void {
 		$data['view_module'] = 'welcome';
 		$data['view_file'] = 'varzybos';
+		$this->template('public', $data);
+	}
+	public function parama(): void {
+		$data['view_module'] = 'welcome';
+		$data['view_file'] = 'parama';
 		$this->template('public', $data);
 	}
 	public function stovykla(): void {

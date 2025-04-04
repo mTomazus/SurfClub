@@ -1,5 +1,8 @@
 <div class="section">
     <?php
+
+        echo '<h2>Artimiausiu metu pagal esamas prognozes planuojamos pamokos</h2>';
+
         foreach($rows as $row) {
             if ($row->available_places !== $row->reserved_places
                 && $row->date >= date('Y-m-d')) {
@@ -17,7 +20,7 @@
                         <p>Laisvų vietų: <?= $places_left ?></p>
                     </div>
                 <?php
-            }
+            } 
         }
     ?>
 </div>

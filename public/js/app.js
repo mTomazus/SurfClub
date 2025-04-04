@@ -20,15 +20,9 @@ function toggleSlideNav() {
   if (slideNav.style.opacity === 1) {
     hamburger.classList.remove("show-burger");
     slideNav.classList.remove("isShown");
-    slideNav.style.opacity = 0;
-    slideNav.style.width = "0";
-    slideNav.style.zIndex = "-1";
   } else {
     hamburger.classList.toggle("show-burger");
     slideNav.classList.toggle("isShown");
-    slideNav.style.opacity = 1;
-    slideNav.style.width = "100%";
-    slideNav.style.zIndex = 2;
   }
 }
 

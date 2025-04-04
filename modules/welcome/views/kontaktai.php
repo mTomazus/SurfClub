@@ -7,10 +7,11 @@
             <div class="rekvizitai">
                 <p>VšĮ Banglentė</p>
                 <p>Vėtros g. 8, Klaipėda</p>
+                <p>Lietuva</p>
                 <p>Įmonės kodas - 304105037</p>
                 <p>Swed bank: LT227300010144594068</p>
                 <p><a href="tel:+37068602356">+370 686 02356</a></p>
-                <p><a href="mailto:sales@banglente.com" style="text-transform: lowercase;">sales@banglente.com</a></p>
+                <p><a href="mailto:info@surfclub.lt" style="text-transform: lowercase;">info@surfclub.lt</a></p>
                 <div id="social">
                     <a href="https://m.me/banglente" class="button messenger">
                         <img src="images/messenger.png" alt="messenger icon">
@@ -71,6 +72,11 @@
     </section>
     <section>
         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d16267.742706037403!2d21.06580763110815!3d55.73128473477712!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46e4d98251ef4133%3A0x6ba6022d59fd57f2!2sBanglentes!5e1!3m2!1slt!2slt!4v1726394268519!5m2!1slt!2slt" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </section>
+    <section class="foot">
+        <a href="welcome/politika">Privatumo politika</a>
+        <a href="welcome/taisykles">Taisyklės</a>
+        <a href="welcome/grazinimas">Grąžinimo sąlygos</a>
     </section>
 </div>
 
@@ -259,6 +265,17 @@
     }
     .text-light {
         color: whitesmoke;
+    }
+    .foot {
+        margin: 1rem;
+        padding: 0.5rem;
+        color: white;
+        display: flex;
+        justify-content: space-around;
+        & a {
+            color:white;
+            font-weight:900;
+        }
     }
     .apie {
         display: flex;
