@@ -50,7 +50,7 @@
         </div>
     </section>
     <section id="remejai">
-        <h2 class="mb-1 text-center text-light">REMĖJAI</h2>
+        <h2 class="mb-1 text-center text-light">REMĖJAI / DRAUGAI</h2>
         <div class="item item1">
             <img class="my-0 shadow-none" style="max-width:100%" src="images/decathlon.svg" alt="decathlon logo">
         </div>
@@ -68,6 +68,9 @@
         </div>
         <div class="item item6">
             <img class="my-0 shadow-none" style="max-width:100%; margin:auto;" src="images/kontaktai/ripcurl.svg" alt="ripcurl logo">
+        </div>
+        <div class="item item7">
+            <img class="my-0 shadow-none" style="max-width:100%; margin:auto;" src="https://www.scaladream.com/wp-content/uploads/2024/08/scala-dream-logo-svg.svg" alt="scaladream logo">
         </div>
     </section>
     <section>
@@ -231,7 +234,7 @@
         position:absolute;
         display:grid;
         align-items:center;
-        left:calc(200px * 6);
+        left:calc(200px * 7);
         border-radius:5px;
         width: 200px;
         height:100px;
@@ -246,22 +249,25 @@
         }
     }
     .item1 {
-        animation-delay: calc(25s / 6 * (6 - 1) * -1);
+        animation-delay: calc(25s / 7 * (7 - 1) * -1);
     }
     .item2 {
-        animation-delay: calc(25s / 6 * (6 - 2) * -1);
+        animation-delay: calc(25s / 7 * (7 - 2) * -1);
     }
     .item3 {
-        animation-delay: calc(25s / 6 * (6 - 3) * -1);
+        animation-delay: calc(25s / 7 * (7 - 3) * -1);
     }
     .item4 {
-        animation-delay: calc(25s / 6 * (6 - 4) * -1);
+        animation-delay: calc(25s / 7 * (7 - 4) * -1);
     }
     .item5 {
-        animation-delay: calc(25s / 6 * (6 - 5) * -1);
+        animation-delay: calc(25s / 7 * (7 - 5) * -1);
     }
     .item6 {
-        animation-delay: calc(25s / 6 * (6 - 6) * -1);
+        animation-delay: calc(25s / 7 * (7 - 6) * -1);
+    }
+    .item7 {
+        animation-delay: calc(25s / 7 * (7 - 7) * -1);
     }
     .text-light {
         color: whitesmoke;

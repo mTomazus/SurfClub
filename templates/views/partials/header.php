@@ -4,7 +4,7 @@
             <li><a href="pamokos/">Pamokos</a></li>
             <li><a href="nuoma/">Nuoma</a></li>
             <li><a href="stovykla/">Stovykla</a></li>
-            <li><a href="varzybos/">Varžybos</a></li>
+            <li><a href="renginiai/">Renginiai</a></li>
             <li><a href="news/">Naujienos</a></li>
         </ul>
         <ul>
@@ -47,7 +47,7 @@
             <li><a href="pamokos">Pamokos</a></li>
             <li><a href="nuoma">Nuoma</a></li>
             <li><a href="stovykla">Stovykla</a></li>
-            <li><a href="varzybos">Varžybos</a></li>
+            <li><a href="renginiai">Renginiai</a></li>
             <li><a href="kontaktai">Kontaktai</a></li>
         </ul>
     </div>

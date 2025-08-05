@@ -44,11 +44,11 @@
 
         function submit_create_account() {
 
-            $this->validation_helper->set_rules('username', 'username', 'required|min_length[6]|max_length[55]|callback_username_unique');
-            $this->validation_helper->set_rules('password', 'password', 'required|min_length[6]|max_length[55]');
-            $this->validation_helper->set_rules('repeat_password', 'repeat password', 'required|matches[password]');
+            $this->validation->set_rules('username', 'username', 'required|min_length[6]|max_length[55]|callback_username_unique');
+            $this->validation->set_rules('password', 'password', 'required|min_length[6]|max_length[55]');
+            $this->validation->set_rules('repeat_password', 'repeat password', 'required|matches[password]');
 
-            $result = $this->validation_helper->run(); //returns true or false
+            $result = $this->validation->run(); //returns true or false
         
             if($result === true) {
                 // Create new member account.
@@ -75,10 +75,10 @@
         }
 
         function submit_login() {
-            $this->validation_helper->set_rules('username', 'username', 'required|callback_login_check');
-            $this->validation_helper->set_rules('password', 'password', 'required');
+            $this->validation->set_rules('username', 'username', 'required|callback_login_check');
+            $this->validation->set_rules('password', 'password', 'required');
         
-            $result = $this->validation_helper->run(); // Returns true or false.
+            $result = $this->validation->run(); // Returns true or false.
         
             if($result === false) {
                 $this->login();

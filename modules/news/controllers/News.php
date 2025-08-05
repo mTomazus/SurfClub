@@ -253,11 +253,11 @@ class News extends Trongate {
 
         if ($submit == 'Submit') {
 
-            $this->validation_helper->set_rules('article_headline', 'Article Headline', 'required|min_length[2]|max_length[255]');
-            $this->validation_helper->set_rules('article_body', 'Article Body', 'required|min_length[2]');
-            $this->validation_helper->set_rules('date_and_time', 'Date And Time', 'required|valid_datetimepicker_us');
+            $this->validation->set_rules('article_headline', 'Article Headline', 'required|min_length[2]|max_length[255]');
+            $this->validation->set_rules('article_body', 'Article Body', 'required|min_length[2]');
+            $this->validation->set_rules('date_and_time', 'Date And Time', 'required');
 
-            $result = $this->validation_helper->run();
+            $result = $this->validation->run();
 
             if ($result == true) {
 
@@ -467,9 +467,9 @@ class News extends Trongate {
             extract($picture_settings);
 
             $validation_str = 'allowed_types[gif,jpg,jpeg,png]|max_size['.$max_file_size.']|max_width['.$max_width.']|max_height['.$max_height.']';
-            $this->validation_helper->set_rules('picture', 'item picture', $validation_str);
+            $this->validation->set_rules('picture', 'item picture', $validation_str);
 
-            $result = $this->validation_helper->run();
+            $result = $this->validation->run();
 
             if ($result == true) {
 

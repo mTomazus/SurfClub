@@ -11,11 +11,22 @@
             $this->template('public', $data);
         }
 
+        function generate_modal() {
+            $this->module('trongate_security');
+            $this->trongate_security->_make_sure_allowed('judges area');
+
+            $comp_id = segment(3);
+            $data['comp_id'] = $comp_id;
+
+            $data['view_file'] = 'generate_modal';
+            $this->template('judges_area', $data);
+        }
+
         function heat_generation_page() {
             $this->module('trongate_security');
             $this->trongate_security->_make_sure_allowed('judges area');
 
-            $sql = "SELECT id, name, year FROM comp_name";
+            $sql = "SELECT id, name, year FROM comp_name WHERE status = 'closed' ORDER BY year DESC";
             $results = $this->model->query($sql, 'array');
             $data['rows'] = $results;
 
@@ -25,18 +36,27 @@
 
         function generate_all_heats() {
 
-            if (!isset($_GET['comp_id'])) {
+            if (segment(3) !== 0) {
+                $comp_id = segment(3); // Get competition ID from URL
+            } else if (isset($_GET['comp_id'])) {
+                $comp_id = $_GET['comp_id']; // Get competition ID from GET request
+            } else {
                 die("No competition selected.");
             }
-
-            $comp_id = $_GET['comp_id']; // Get selected competition
 
             // Fetch competition name
             $competition = $this->model->get_one_where('id', $comp_id, 'comp_name');
 
             $comp_name = $competition->name . ' ' . $competition->year;
 
-            $divisions = ["Male U12", "Male U15", "Male U18", "Female U12", "Female U15", "Female U18"];
+            $sql = "SELECT d.name
+                        FROM comp_competition_divisions cd
+                        JOIN comp_divisions d ON cd.division_id = d.id
+                        WHERE cd.competition_id = $comp_id";
+
+            $div = $this->model->query($sql, 'array');
+            $divisions = array_column($div, 'name');
+            //$divisions = ["Male U12", "Male U15", "Male U18", "Female U12", "Female U15", "Female U18", "Male ADT", "Female ADT", "Male VET", "Female VET"];
 
             foreach ($divisions as $division) {
                 // Get participants in this competition and division
@@ -59,9 +79,9 @@
                 $total_participants = count($participants);
 
                 // Maximum participants per heat
-                if ($total_participants <= 4) {
+                if ($total_participants = 4) {
 
-                    echo "<h3>Started Generating heats <=4 for " . out($division);
+                    echo "<h3>Started Generating heats =4 for " . out($division);
                     $four = $this->generate_four($comp_id, $participants, $total_participants, $division);
                     echo "<h3>Heats Generated Successfully for " . out($division);
 
@@ -83,11 +103,24 @@
                     $nine = $this->generate_nine($comp_id, $participants, $total_participants, $division);
                     echo "<h3>Heats Generated Successfully for " . out($division);
 
+                } elseif ($total_participants <= 12) {
+
+                    echo "<h3>Started Generating heats <=12 for " . out($division);
+                    $twelve = $this->generate_twelve($comp_id, $participants, $total_participants, $division);
+                    echo "<h3>Heats Generated Successfully for " . out($division);
+
+                } elseif ($total_participants <= 16) {
+
+                    echo "<h3>Started Generating heats <=16 for " . out($division);
+                    $nine = $this->generate_sixteen($comp_id, $participants, $total_participants, $division);
+                    echo "<h3>Heats Generated Successfully for " . out($division);
+
                 } 
                 
             }
 
-            echo "<h2>Heats Generated Successfully for " . out($comp_name); 
+            echo "<h2>Heats Generated Successfully for " . out($comp_name);
+            $this->module->update($comp_id, ['status' => 'generated'], 'comp_name'); 
             redirect('competitions-heats/show_heats_draw/' . $comp_id);
         }
 
@@ -95,7 +128,13 @@
             $this->module('trongate_security');
             $this->trongate_security->_make_sure_allowed('judges area');
 
-            $all_heats = $this->model->get('id', 'comp_heats');
+            $sql = "SELECT ch.*, CONCAT(cn.name, ' ', cn.year) AS name
+                    FROM comp_heats ch
+                    JOIN comp_name cn ON ch.comp_id = cn.id
+                    WHERE ch.status IN ('pending', 'scheduled')
+                    ORDER BY ch.id, ch.heat_number;";
+
+            $all_heats = $this->model->query($sql, 'object');
 
             $data = [
                 'heats' => $all_heats,
@@ -107,15 +146,15 @@
         function update_heat_schedule() {
 
             // Validate time inputs
-            $this->validation->set_rules('start_time', 'start_time', 'required||valid_datetimepicker_eu');
-            $this->validation->set_rules('length', 'length', 'required|integer');
+            $this->validation->set_rules('start_time', 'start_time', 'required');
+            $this->validation->set_rules('heat-length', 'heat-length', 'required');
 
-            $result = $this->validation_helper->run();
-
+            $result = $this->validation->run();
+            
             if ($result == true) {
 
                 $start_time = post('start_time');
-                $length = post('heat_length');
+                $length = post('heat-length');
                 $heat_id = post('heat_id');
 
                 $end_time = date('Y-m-d H:i', strtotime($start_time . " +$length minutes"));
@@ -132,6 +171,7 @@
             
                 return $update_success ? "Heat updated successfully!" : "Error updating heat.";
             }
+            echo "<p style='color:red'>Validation error</p>";
         }
 
         function show_heats_draw() {
@@ -339,7 +379,7 @@
             $division_total = $this->model->query_bind($sql, [$heat_id], 'array');
             return (int)$division_total[0]['total'];
         }
-        // competition net structure
+        
         function _determine_heat_results($division_size, $current_round, $final_scores) {
             $advancing = [];
             $repechage = [];
@@ -363,7 +403,7 @@
                     $advancing = array_slice($final_scores, 0, 2);
                     $repechage = array_slice($final_scores, 2, 2);
                 } elseif ($current_round == 'Repechage 1') {
-                    $advancing = array_slice($final_scores, 0, 2);
+                    $repechage = array_slice($final_scores, 0, 2);
                     $eliminated = array_slice($final_scores, 2, 2);
                 } elseif ($current_round == 'Round 2') {
                     $advancing = array_slice($final_scores, 0, 2);
@@ -378,7 +418,7 @@
                     $advancing[] = $final_scores[0];
                     $repechage = array_slice($final_scores, 1, 2);
                 } elseif ($current_round == 'Repechage 1') {
-                    $advancing[] = $final_scores[0];
+                    $repechage[] = $final_scores[0];
                     $eliminated = array_slice($final_scores, 1, 2);
                 } elseif ($current_round == 'Round 2') {
                     $advancing[] = $final_scores[0];
@@ -388,19 +428,34 @@
                     $eliminated = array_slice($final_scores, 2);
                 }
 
-            }elseif ($division_size <= 12) {
+            } elseif ($division_size <= 12) {
                 if ($current_round == 'Round 1') {
                     $advancing[] = array_slice($final_scores, 0, 2);
                     $repechage = array_slice($final_scores, 2, 2);
                 } elseif ($current_round == 'Repechage 1') {
-                    $advancing[] = $final_scores[0];
+                    $repechage[] = $final_scores[0];
                     $eliminated = array_slice($final_scores, 1, 2);
                 } elseif ($current_round == 'Round 2') {
                     $advancing[] = $final_scores[0];
                     $repechage = array_slice($final_scores, 1, 2);
                 } elseif ($current_round == 'Repechage 2') {
-                    $advancing = $final_scores[0];
+                    $advancing[] = $final_scores[0];
                     $eliminated = array_slice($final_scores, 1, 2);
+                }
+
+            } elseif ($division_size <= 16) {
+                if ($current_round == 'Round 1') {
+                    $advancing = array_slice($final_scores, 0, 2);
+                    $repechage = array_slice($final_scores, 2, 2);
+                } elseif ($current_round == 'Repechage 1') {
+                    $repechage[] = $final_scores[0];
+                    $eliminated = array_slice($final_scores, 1);
+                } elseif ($current_round == 'Round 2') {
+                    $advancing[] = $final_scores[0];
+                    $repechage = array_slice($final_scores, 1);
+                } elseif ($current_round == 'Repechage 2') {
+                    $advancing[] = $final_scores[0];
+                    $eliminated = array_slice($final_scores, 1);
                 }
             }
         
@@ -926,6 +981,81 @@
             ];
             $rep2_heat_id = $this->model->insert($rep2_heat_data, 'comp_heats');
            
+            //insert FINAL to heats table
+            $final_heat_data = [
+                'round' => 'Final',
+                'heat_number' => 1,
+                'comp_id' => $comp_id,
+                'division' => $division
+            ];
+            $final_heat_id = $this->model->insert($final_heat_data, 'comp_heats');
+        }
+    //-------------------------------------------------------------
+    //------------------MAX 16 PARTICIPANTS------------------------
+    //-------------------------------------------------------------
+        private function generate_sixteen($comp_id, $participants, $total_participants, $division) {
+            
+            $jersey_colors = ["white", "red", "green", "blue"];
+            
+            //------ Round 1 - 4 heats ----------------
+            // Calculate number of heats (max 4 per heat, but spread evenly)
+            $num_heats = 4;
+            $heats = [];
+            for ($i = 0; $i < $num_heats; $i++) {
+                $heat_data = [
+                    'round' => 'Round 1',
+                    'heat_number' => $i + 1,
+                    'comp_id' => $comp_id,
+                    'division' => $division
+                ];
+                $heats[] = $this->model->insert($heat_data, 'comp_heats');
+            }
+
+            // Distribute participants round-robin
+            foreach ($participants as $idx => $participant) {
+                $heat_idx = $idx % $num_heats;
+                $color = $jersey_colors[($idx / $num_heats) % count($jersey_colors)];
+                $part_data = [
+                    'heat_id' => $heats[$heat_idx],
+                    'participant_id' => $participant['id'],
+                    'jersey_color' => $color
+                ];
+                $this->model->insert($part_data, 'comp_heat_participants');
+            }
+
+            //insert REPECHAGE two heats to heats table
+            for ($i = 0; $i < 2; $i++) {
+                $rep_heat_data = [
+                    'round' => 'Repechage 1',
+                    'heat_number' => $i + 1,
+                    'comp_id' => $comp_id,
+                    'division' => $division
+                ];
+                $rep_heat_id = $this->model->insert($rep_heat_data, 'comp_heats');
+            }
+
+            //insert ROUND 2 two heats to heats table
+            for ($i = 0; $i < 2; $i++) {
+                $round_heat_data = [
+                    'round' => 'Round 2',
+                    'heat_number' => $i + 1,
+                    'comp_id' => $comp_id,
+                    'division' => $division
+                ];
+                $r2_heat_id = $this->model->insert($round_heat_data, 'comp_heats');
+            }
+
+            //insert REPECHAGE 2 two heats to heats table
+            for ($i = 0; $i < 2; $i++) {
+                $rep2_heat_data = [
+                    'round' => 'Repechage 2',
+                    'heat_number' => $i + 1,
+                    'comp_id' => $comp_id,
+                    'division' => $division
+                ];
+                $rep2_heat_id = $this->model->insert($rep2_heat_data, 'comp_heats');
+            }
+
             //insert FINAL to heats table
             $final_heat_data = [
                 'round' => 'Final',

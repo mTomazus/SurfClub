@@ -37,13 +37,36 @@ class Welcome extends Trongate {
 		$this->template('public', $data);
 	}
 	public function index(): void {
-		$data['view_module'] = 'welcome';
-		$data['view_file'] = 'stovykla';
-		$this->template('public', $data);
+        $data['view_module'] = 'welcome';
+        if (isset($_GET['lang'])) {
+            $_SESSION['language_code'] = preg_replace('/[^a-z]/', '', $_GET['lang']);
+        } 
+        $lang = (isset($_SESSION['language_code'])) ? $_SESSION['language_code'] : 'lt';
+        $page_id = 1; // This is the ID for the surf camp page
+
+        $sql = "SELECT title, description FROM lang_translations WHERE page_id = ? AND language_code = ?";
+        $result = $this->model->query_bind($sql, [$page_id, $lang], 'object');
+        
+        $data['page_title'] = $result[0]->title;
+        $data['translated_html'] = $result[0]->description;
+        $data['view_file'] = 'stovykla';
+        $this->template('public', $data);
 	}
+    public function admin(): void {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+        $data['view_module'] = 'welcome';
+        $data['view_file'] = 'admin';
+        $this->template('admin_area', $data);
+    }
 	public function varzybos(): void {
 		$data['view_module'] = 'welcome';
 		$data['view_file'] = 'varzybos';
+		$this->template('public', $data);
+	}
+	public function renginiai(): void {
+		$data['view_module'] = 'welcome';
+		$data['view_file'] = 'renginiai';
 		$this->template('public', $data);
 	}
 	public function parama(): void {
@@ -51,11 +74,28 @@ class Welcome extends Trongate {
 		$data['view_file'] = 'parama';
 		$this->template('public', $data);
 	}
-	public function stovykla(): void {
+	public function stovykla_old(): void {
 		$data['view_module'] = 'welcome';
-		$data['view_file'] = 'stovykla';
+		$data['view_file'] = 'stovykla.bak'; // This is the old version of the surf camp page
+        // Note: This file should be renamed to 'stovykla.php' if you want to use it as the current surf camp page
 		$this->template('public', $data);
 	}
+	public function stovykla(): void {
+        $data['view_module'] = 'welcome';
+        if (isset($_GET['lang'])) {
+            $_SESSION['language_code'] = preg_replace('/[^a-z]/', '', $_GET['lang']);
+        } 
+        $lang = (isset($_SESSION['language_code'])) ? $_SESSION['language_code'] : 'lt';
+        $page_id = 1; // This is the ID for the surf camp page
+
+        $sql = "SELECT title, description FROM lang_translations WHERE page_id = ? AND language_code = ?";
+        $result = $this->model->query_bind($sql, [$page_id, $lang], 'object');
+        
+        $data['page_title'] = $result[0]->title;
+        $data['translated_html'] = $result[0]->description;
+        $data['view_file'] = 'stovykla';
+        $this->template('public', $data);
+    }
 	public function nuoma(): void {
 		$data['view_module'] = 'welcome';
 		$data['view_file'] = 'nuoma';
@@ -65,7 +105,7 @@ class Welcome extends Trongate {
         echo '<p>stovyklos registracijos modalas</p>';
     }
 	public function pamokos(): void {
-		$path = BASE_URL."public/images/pamokos/"; // Path for url src
+		$path = BASE_URL."images/pamokos/"; // Path for url src
 		$dir = APPPATH."public/images/pamokos/"; // Folder containing the images
 		$images = scandir($dir); // Read all files in the directory, includes . and  ..
 		unset($images[0], $images[1]); // Remove . and .. from array 

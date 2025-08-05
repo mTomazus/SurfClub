@@ -1,16 +1,6 @@
-    <div id="response"></div>
+<div id="response"></div>
    
     <?php
-
-      $options = array();
-
-        foreach($rows as $row) {
-          $pam_id = $row->pamaina;
-          $pam_start = $row->start;
-          $pam_end = $row->end;
-          $pam = $row->pamaina.'.  '.$pam_start.' - '.$pam_end;
-          $options["$pam"] = "$pam";
-        }
 
       $form_attr = [
         'mx-post' => $form_location,
@@ -29,7 +19,24 @@
       echo form_label('Emailas');
       echo form_email('email', '', array("placeholder" => "Jūsų emailas..."));
       echo form_label('Pamaina');
-      echo form_dropdown('pamaina', $options);
+      ?>
+        <select name="pamaina">
+            <?php foreach($rows as $row): 
+                $pam = $row->pamaina.'.  '.$row->start.' - '.$row->end;
+                $disabled = ($row->status !== 'active') ? 'disabled' : '';
+                $label = $pam;
+                if ($row->status === 'ended') {
+                    $label .= ' (baigėsi)';
+                } elseif ($row->status !== 'active') {
+                    $label .= ' (nėra vietų)';
+                }
+            ?>
+                <option value="<?= $pam ?>" <?= $disabled ?>>
+                    <?= $label ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+      <?php
       echo form_label('Amžius');
       echo form_input('age', '', array("placeholder" => "Stovyklautojo amžius..."));
       echo form_hidden('status', 'initial');

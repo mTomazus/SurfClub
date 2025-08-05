@@ -1,6 +1,6 @@
 {
   "Get": {
-    "url_segments": "api/get/lesson_users",
+    "url_segments": "api/get/lessons-users",
     "request_type": "GET",
     "description": "Fetch rows from table",
     "enableParams": true,
@@ -11,7 +11,7 @@
     }
   },
   "Get By Post": {
-    "url_segments": "api/get/lesson_users",
+    "url_segments": "api/get/lessons-users",
     "request_type": "POST",
     "description": "Fetch rows from table using POST request.",
     "enableParams": true,
@@ -22,7 +22,7 @@
     }
   },
   "Find One": {
-    "url_segments": "api/get/lesson_users/{id}",
+    "url_segments": "api/get/lessons-users/{id}",
     "request_type": "GET",
     "description": "Fetch one row",
     "required_fields": [
@@ -33,7 +33,7 @@
     ]
   },
   "Exists": {
-    "url_segments": "api/exists/lesson_users/{id}",
+    "url_segments": "api/exists/lessons-users/{id}",
     "request_type": "GET",
     "description": "Check if instance exists",
     "required_fields": [
@@ -44,13 +44,13 @@
     ]
   },
   "Count": {
-    "url_segments": "api/count/lesson_users",
+    "url_segments": "api/count/lessons-users",
     "request_type": "GET",
     "description": "Count number of records",
     "enableParams": true
   },
   "Count By Post": {
-    "url_segments": "api/count/lesson_users",
+    "url_segments": "api/count/lessons-users",
     "request_type": "POST",
     "description": "Count number of records using POST request",
     "enableParams": true,
@@ -61,19 +61,19 @@
     }
   },
   "Create": {
-    "url_segments": "api/create/lesson_users",
+    "url_segments": "api/create/lessons-users",
     "request_type": "POST",
     "description": "Insert database record",
     "enableParams": true
   },
   "Insert Batch": {
-    "url_segments": "api/batch/lesson_users",
+    "url_segments": "api/batch/lessons-users",
     "request_type": "POST",
     "description": "Insert multiple records",
     "enableParams": true
   },
   "Update": {
-    "url_segments": "api/update/lesson_users/{id}",
+    "url_segments": "api/update/lessons-users/{id}",
     "request_type": "PUT",
     "description": "Update a database record",
     "enableParams": true,
@@ -85,13 +85,13 @@
     ]
   },
   "Destroy": {
-    "url_segments": "api/destroy/lesson_users",
+    "url_segments": "api/destroy/lessons-users",
     "request_type": "DELETE",
     "description": "Delete row or rows",
     "enableParams": true
   },
   "Delete One": {
-    "url_segments": "api/delete/lesson_users/{id}",
+    "url_segments": "api/delete/lessons-users/{id}",
     "request_type": "DELETE",
     "description": "Delete one row",
     "required_fields": [

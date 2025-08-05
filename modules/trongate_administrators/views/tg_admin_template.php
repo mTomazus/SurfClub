@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 	<link rel="stylesheet" href="<?= BASE_URL ?>css/trongate.css">
-	<title>Trongate Administrators</title>
+	<title>SurfClub Admin</title>
 </head>
 
 <body>
@@ -42,10 +42,11 @@
 	</div>
 	<style>
 		body {
-			background: rgb(0, 0, 0);
+			background-image: url("<?= BASE_URL ?>/images/out-0-3.webp");
+			/* background: rgb(0, 0, 0);
 			background: -webkit-linear-gradient(rgba(0, 0, 0, 1) 0%, rgba(51, 51, 51, 1) 35%, rgba(111, 111, 111, 1) 100%);
 			background: -o-linear-gradient(rgba(0, 0, 0, 1) 0%, rgba(51, 51, 51, 1) 35%, rgba(111, 111, 111, 1) 100%);
-			background: linear-gradient(rgba(0, 0, 0, 1) 0%, rgba(51, 51, 51, 1) 35%, rgba(111, 111, 111, 1) 100%);
+			background: linear-gradient(rgba(0, 0, 0, 1) 0%, rgba(51, 51, 51, 1) 35%, rgba(111, 111, 111, 1) 100%); */
 			background-repeat: no-repeat;
 			background-size: cover;
 			min-height: 100vh;

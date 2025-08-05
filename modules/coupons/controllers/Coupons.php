@@ -4,33 +4,86 @@ class Coupons extends Trongate {
     private $default_limit = 20;
     private $per_page_options = array(10, 20, 50, 100);    
 
-    public function demo() {
-        $data['view_file'] = 'demo';
-        $this->template('public', $data);
+    public function index() {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+        $data['rows'] = $this->model->get();
+        $data['view_file'] = 'index_coupon';
+        $this->template('admin_area', $data);
     }
-    public function submit_new_coupon() {
-        $data['coupon_type'] = post('coupon_type');
-        $data['phone'] = post('phone');
-        $data['price'] = post('price');
-        $data['name'] = post('name');
-        $data['date_formed'] = post('date_formed');
-        $this->model->insert($data, 'coupons');
-        echo'<p style="color:green;">Coupon successfully added.</p>';
+
+    public function fetch_table() {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $data['rows'] = $this->model->get();
+        $this->view('fetch_table', $data);
     }
+
+    public function coupon_form() {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $update_id = (int) segment(3);
+        if ($update_id>0) {
+           $data = $this->get_data_from_db($update_id); 
+           $this->view('coupon_form', $data);
+        } else {
+            $this->view('coupon_form');
+        } 
+    }
+
+    public function delete_modal() {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $update_id = (int) segment(3);
+        $data['update_id'] = $update_id;
+        $this->view('delete_modal', $data);
+    }
+
+    public function submit_coupon(): void{
+
+        $this->validation->set_rules('coupon_type', 'Coupon Type', 'required|min_length[2]|max_length[255]');
+        $this->validation->set_rules('price', 'Price', 'required|min_length[2]|max_length[255]');
+        $this->validation->set_rules('phone', 'Phone', 'required|min_length[2]|max_length[255]');
+        $this->validation->set_rules('name', 'Name', 'required|min_length[2]|max_length[255]');
+        $this->validation->set_rules('email', 'Email', 'required|valid_email');
+
+        $result = $this->validation->run();
+
+        if ($result === true) {
+
+            $update_id = (int) segment(3);
+            $data = $this->get_data_from_post();
+            
+            if ($update_id>0) {
+                //update an existing record
+                $this->model->update($update_id, $data, 'coupons');
+                $flash_msg = 'The coupon record was successfully updated';
+            } else {
+                //insert the new record
+                $this->model->insert($data, 'coupons');
+                $flash_msg = 'The coupon record was successfully created';
+            }
+
+            http_response_code(200);
+            echo '<p>' . $flash_msg . '</p>';
+                
+        } else {
+            //form submission error
+            echo validation_errors();
+            http_response_code(400); 
+            $this->coupon_form();
+
+        }
+    }
+
     public function submit_delete_coupon() {
         $record_id = segment(3,'int');
         $this->model->delete($record_id);
+        echo '<p>The coupon record was successfully deleted</p>';
     }
-    public function edit_coupon() {
-        $data['view_file'] = 'edit_coupon';
-        $this->template('public', $data);
-    }
-    public function success_ahoy() {
-        http_response_code(200); 
-        echo '<p style="color:green">Well done! All is great!</p>';
-    }
-    public function error_ahoy() {
-        http_response_code(400);    }
 
     /**
      * Display a webpage with a form for creating or updating a record.
@@ -149,7 +202,7 @@ class Coupons extends Trongate {
             $this->validation->set_rules('price', 'Price', 'required|min_length[2]|max_length[255]');
             $this->validation->set_rules('phone', 'Phone', 'required|min_length[2]|max_length[255]');
             $this->validation->set_rules('name', 'Name', 'required|min_length[2]|max_length[255]');
-            $this->validation->set_rules('date_formed', 'Date Formed', 'required|valid_datepicker_us');
+            $this->validation->set_rules('email', 'Email', 'required|valid_email');
 
             $result = $this->validation->run();
 
@@ -157,7 +210,6 @@ class Coupons extends Trongate {
 
                 $update_id = (int) segment(3);
                 $data = $this->get_data_from_post();
-                $data['date_formed'] = date('Y-m-d', strtotime($data['date_formed']));
                 
                 if ($update_id>0) {
                     //update an existing record
@@ -325,7 +377,9 @@ class Coupons extends Trongate {
         $data['price'] = post('price', true);
         $data['phone'] = post('phone', true);
         $data['name'] = post('name', true);
-        $data['date_formed'] = post('date_formed', true);        
+        $data['email'] = post('email', true);       
+        $data['status'] = post('status', true);       
+        $data['date_formed'] = post('date_formed', true);       
         return $data;
     }
 

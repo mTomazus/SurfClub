@@ -16,7 +16,7 @@
         </ul>
     </div>
     <div class="logo-pic">
-        <img src="images/logo-shop-1.png" alt="logo surf club">
+        <img src="images/logo-shop-1.webp" alt="logo surf club">
     </div>
     <div class="logo">
         <?= anchor(BASE_URL, 'Molas Surf Shop') ?>
@@ -29,7 +29,7 @@
 </div>
 <div id="header-lg">
     <div class="logo-pic">
-        <img src="images/logo-shop-1.png" alt="logo surf club">
+        <img src="images/logo-shop-1.webp" alt="logo surf club">
     </div>
     <div class="logo">
         <?= anchor(BASE_URL,  'Molas Surf Shop') ?>

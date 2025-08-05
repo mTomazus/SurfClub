@@ -1,4 +1,4 @@
-    <div class="container">
+<div class="container">
     <h2>Ačiū!</h2>
     <p>Jūsų mokėjimas buvo sėkmingas.</p>
     <p>Jūsų užsakymas priimtas. Netrukus su jumis susisieksime!</p>

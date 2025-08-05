@@ -34,6 +34,7 @@
         display: grid;
         gap: 1rem;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        margin-bottom: 2rem;
     }
     .jersey {
         width: 30px;
@@ -59,7 +60,7 @@
         box-shadow: 0 0 5px green;
     }
     .blue {
-        background: blue;
+        background: radial-gradient(circle at 100px 100px, #5cabff, rgb(10, 118, 233) 78.99%, #2216a6);
         color:white;
         border: 1px solid black;
         box-shadow: 0 0 5px blue;
@@ -70,17 +71,15 @@
         padding: 1rem;
         box-shadow: 0 0 10px white;
         & div {
-            display: flex;
+            display: grid;
+            grid-template-columns: auto auto;
             justify-content: space-between;
             align-items: center;
             & p {
-                margin: 0 2rem;
+                margin: 0;
                 font-weight: 900;
                 font-family: Silom;
                 transition:all 1s;
-            }
-            & p:hover {
-                background:white;
             }
         }
     }
@@ -106,15 +105,17 @@
         }
     }
 </style>
-<h1>competitions</h1>
-<div class="">
+<div id="results"><h1>ALL COMPETITIONS</h1>
+    <div class="justify-center d-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
 
-<?php foreach ($competitions as $comp) {
+        <?php 
 
-    echo '<div class="card" mx-select="#full-draw" mx-target="h1" mx-swap="outerHTML" mx-get="competitions-heats/show_heats_draw/' . out($comp->id) . '"><h3>' . out($comp->name) . ' ' . out($comp->year) . '</h3>';
-    echo '<h3>' . out($comp->location) . '</h3></div>';
+            foreach ($competitions as $comp) {
+                echo '<div class="card" mx-select="#full-draw" mx-target="#results" mx-get="competitions-heats/show_heats_draw/' . out($comp->id) . '"><h3>' . out($comp->name) . ' ' . out($comp->year) . '</h3>';
+                echo '<h3>' . out($comp->location) . '</h3></div>';
+            }
 
-}
+        ?>
 
-?>
+    </div>
 </div>

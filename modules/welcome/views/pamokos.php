@@ -1,6 +1,7 @@
 <div class="wrapper container-xxl">
     <h1 class="title">SURF PAMOKOS</h1>
     <h2>Išbandykite banglentes</h2>
+    <a class="lg button mb-1" style="font-family:inherit;" href="lessons-schedules"><i class="fa fa-calendar mr-1" aria-hidden="true"></i>REGISTACIJA</a>
     <h3 class="mb-1">Puikiai išmanantys banglenčių sportą instruktoriai per pusantros valandos trūkmės pamoką pamokys, kaip pasigauti savo pirmą bangą. 
         Vedamos trejų lygių pamokos:</h3>
     <div class="content">
@@ -25,46 +26,44 @@
             </div>
         </div>
 
-        <div class="tipai">
-            <div class="bg-white mb-1 p-05 box-shadow">
+        <div class="tipai" style="min-height: 100%;display:grid;">
+            <a href="lessons-schedules" class="bg-white mb-1 p-05 box-shadow">
                 <div class="pamoka"><h2>PAMOKŲ PAKETAS</h2><h4>150€</h4></div>
                 <p class="">Pakete dvi 1h trukmės pamokos, pirmoje pamokoje ramiame vandenyje išmokstam irklavimo, atsistojimo techniką ir balanso ant lentos. Antroje pamokoje jau bangose - pozicionavimą ir technikos tolimesnis įsisavinimas praktikoje.</p>
-            </div>
-            <div class="bg-white mb-1 p-05 box-shadow">
+                <i class="fa fa-hand-pointer-o" aria-hidden="true"> registuokis</i>
+            </a>
+            <a href="lessons-schedules" class="bg-white mb-1 p-05 box-shadow">
                 <div class="pamoka">
                     <h2>PRIVATI PAMOKA</h2>
                     <h4>85€</h4>
                 </div>
                 <p>Per šią pusantros valandos privačią serfingo pamoką pristatysime Jums etiketo, saugumo, serfingo pagrindus, irklavimo techniką, pozicionavimą bangose bei atsistojimo būdus.</p>
-            </div>
-            <div class="bg-white mb-1 p-05 box-shadow">
+                <i class="fa fa-hand-pointer-o" aria-hidden="true"> registuokis</i>
+            </a>
+            <a href="lessons-schedules" class="bg-white mb-1 p-05 box-shadow">
                 <div class="pamoka">
                     <h2>GRUPINĖ</h2>
                     <h4>40€</h4>
                 </div>
                 <p>Idealiai tinka pradedantiesiems ar tiems, kurie nori prisiminti pagrindus ir techniką. Pamoka kartu su mumis reiškia, kad mokotės iš geriausių, kad galėtumėte tapti geriausiais.</p>
-            </div>
-            <div class="bg-white mb-1 p-05 box-shadow">
+                <i class="fa fa-hand-pointer-o" aria-hidden="true"> registuokis</i>
+            </a>
+            <a href="lessons-schedules" class="bg-white mb-1 p-05 box-shadow">
                 <div class="pamoka">
                     <h2>PAMOKA DVIEM</h2>
                     <h4>120€</h4>
                 </div>
                 <p>Geriausiai tinka 2 asmenims - draugams ar draugėms, poroms ar artimiesiems. Čia mes pristatysime Jums saugumo ir serfingo pagrindus, irklavimo techniką bei atsistojimo būdus.</p>
-            </div>
-            <div class="bg-white mb-1 p-05 box-shadow">
-                <div class="pamoka">
-                    <h2>KOMANDOS FORMAVIMAS</h2>
-                    <h4>nuo 200€</h4>
-                </div>
-                <p>Subūrėte didelę grupę nuo 6 iki 12 žmonių, kuri norėtų išbandyti save bangose? Pabūti kartu, patirti geras emocijas bei palaikyti vienas kitą? Tai tinkamiausias pasirinkimas jums!</p>
-            </div>
-            <div class="bg-white p-05 box-shadow">
+                <i class="fa fa-hand-pointer-o" aria-hidden="true"> registuokis</i>
+            </a>
+            <a href="lessons-schedules" class="bg-white p-05 box-shadow">
                 <div class="pamoka">
                     <h2>INDIVIDUALI PLUS</h2>
                     <h4>100€</h4>
                 </div>
                 <p>Ši serfingo pamoka tinka tiek naujokams tiek pažengusiems ir su orientuocija į pastioviai daromas esmines klaidas ir kilstelėtų Jūsų techniką į naują lygį. Jei ieškote vertos pamokos - Jūs ją radote.</p>
-            </div>
+                <i class="fa fa-hand-pointer-o" aria-hidden="true"> registuokis</i>
+            </a>
         </div>
 
         <div class="galerija">
@@ -95,12 +94,15 @@
             </div>
         </div>
 
-        <div class="registracija">
-            <h2 class="box-shadow">registracija</h2>
-            <div class="mt-1 bg-white p-1 box-shadow"> 
-                <p class="blink" style="color:black;">call us +37068602356</p>   
+        <div>
+            <h2 class="box-shadow">KOMANDOS FORMAVIMAS</h2>
+            <div class="kuponas description mt-1 bg-white p-1 box-shadow">
+                <h3>nuo 200€</h3>
+                <p style="color:rgb(69, 69, 69)">Subūrėte didelę grupę nuo 6 iki 12 žmonių, kuri norėtų išbandyti save bangose? Pabūti kartu, patirti geras emocijas bei palaikyti vienas kitą? Tai tinkamiausias pasirinkimas jums!</p>
             </div>
         </div>
+        
+
     </div>
 </div>
 
@@ -156,6 +158,21 @@
             font-family: alegreya;
             text-shadow: none;
         }
+        a {
+            position: relative;
+            text-decoration: none;
+            color: var(--dark-text);
+        }
+        a:hover {
+            box-shadow: 0 0 10px var(--banglente);
+            transform: scale(1.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        i {
+            position: absolute;
+            right: 1rem;
+            bottom: 1rem;
+        }
     }
     .col {
         padding:0.5rem;
@@ -202,6 +219,8 @@
         position: relative;
         align-items: center;
         h2 {
+            color:white;
+            text-decoration:none;
             text-align: left;
             padding-left: 2rem;
             background: linear-gradient(161deg, #134567 0%, #256690 20%, rgba(47, 120, 168, 0.37) 42%, rgba(0, 212, 255, 0) 65%, rgba(0, 212, 255, 0) 100%);

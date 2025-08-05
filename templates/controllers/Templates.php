@@ -23,6 +23,10 @@ class Templates extends Trongate {
         load('judges_area', $data);
     }
 
+    function admin_area($data): void {
+        load('admin_area', $data);
+    }
+
     /**
      * Loads the 'error_404' view with provided data.
      *

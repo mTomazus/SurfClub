@@ -47,7 +47,7 @@ if (count($rows)>0) { ?>
             <tr>
                 <td><?= out($row->name) ?></td>
                 <td><?= out($row->price) ?></td>
-                <td><?= out($row->stock) ?></td>
+                <td><?= out($row->in_stock) ?></td>
                 <td><?= out($row->status) ?></td>
                 <td><?= out($categories) ?></td>
                 <td><?= out($variants) ?></td>

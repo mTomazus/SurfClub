@@ -219,17 +219,17 @@
 			gap: 0.1rem;
 			border: 1px solid var(--primary-txt-clr);
 		}
-		.side_button {
+		.side-button {
 			padding:1rem;
 			text-align: center;
 			text-decoration: none;
 			cursor: pointer;
 			margin-right:1rem;
 		}
-		.side_button:hover {
+		.side-button:hover {
 			color:skyblue;
 		}
-		.side_button:not(:last-child) {
+		.side-button:not(:last-child) {
 			border-bottom: 1px solid var(--primary-txt-clr);
 		}
 		.slide-footer {
@@ -414,7 +414,7 @@
 		.side-nav {
 			display: flex;
 			flex-direction: column;
-			& .side_button {
+			& .side-button {
 				display:grid;
 				grid-template-columns: 1fr 4fr;
 			}

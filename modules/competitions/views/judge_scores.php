@@ -1,7 +1,8 @@
 <!---------------------------------------------->
 <!-------------- SCORE show BELOW -------------->
 <!---------------------------------------------->
-<h2>Competition Participants</h2>
+<div id="form-container">
+    <h2>My Heat Scores</h2>
 <table>
     <thead>
         <tr>
@@ -29,7 +30,7 @@
             $participant_id = $participant['participant_id'];
             $jersey_color = strtoupper($participant['jersey_color']); // Get assigned jersey color
         ?>
-            <tr>
+            <tr style="background:none">
                 <td style="text-transform: uppercase;color:black;background:<?= $jersey_color ?>"><?= $jersey_color ?></td>
                 <?php for ($i = 1; $i <= $max_wave; $i++): 
 
@@ -48,3 +49,4 @@
         <?php endforeach; ?>
     </tbody>
 </table>
+</div>

@@ -17,7 +17,7 @@ class Trongate_administrators extends Trongate {
      *
      * @var string
      */
-    private $dashboard_home = 'trongate_pages/manage';
+    private $dashboard_home = 'welcome/admin';
 
     /**
      * Renders a login page for administrators.
@@ -58,14 +58,16 @@ class Trongate_administrators extends Trongate {
                 die();
             }
         }
-
+        
         $submit = post('submit');
 
         if ($submit === 'Submit') {
+
             // Set validation rules for username and password.
-            $this->validation_helper->set_rules('username', 'username', 'required|callback_login_check');
-            $this->validation_helper->set_rules('password', 'password', 'required|min_length[5]');
-            $result = $this->validation_helper->run();
+            $this->validation->set_rules('username', 'username', 'required|callback_login_check');
+            $this->validation->set_rules('password', 'password', 'required|min_length[5]');
+            $result = $this->validation->run();
+            //$result = $this->login_check(post('username'));
 
             if ($result === true) {
                 $this->log_user_in(post('username'));
@@ -91,11 +93,11 @@ class Trongate_administrators extends Trongate {
 
         if ($submit === 'Submit') {
             // Set validation rules for username, password, and repeat password.
-            $this->validation_helper->set_rules('username', 'username', 'required|min_length[5]|callback_username_check');
-            $this->validation_helper->set_rules('password', 'password', 'required|min_length[5]');
-            $this->validation_helper->set_rules('repeat_password', 'repeat password', 'matches[password]');
+            $this->validation->set_rules('username', 'username', 'required|min_length[5]|callback_username_check');
+            $this->validation->set_rules('password', 'password', 'required|min_length[5]');
+            $this->validation->set_rules('repeat_password', 'repeat password', 'matches[password]');
 
-            $result = $this->validation_helper->run();
+            $result = $this->validation->run();
 
             if ($result === true) {
                 $update_id = segment(3);

@@ -46,6 +46,7 @@
     </div>
     <?php } else {
         echo '<h2>Jūsų prekių krepšelis yra tuščias</h2>';
+        echo '<h2 class="text-center"><a href="products">Tęsti apsipirkimą</a></h2>';
     } ?>
 
     <style>

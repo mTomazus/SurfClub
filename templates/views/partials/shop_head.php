@@ -13,12 +13,4 @@
 <link rel="stylesheet" href="<?= BASE_URL ?>css/trongate.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/app.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/shop.css">
-<?php
-    $segment = segment(2);
-    if (strlen($segment) !== 0) {
-        $title = ucfirst(segment(2));
-    } else {
-        $title = "Parduotuvė";
-    }
-?>
-<title>Molas Surf Club - <?= $title ?></title>
+<title>Molas Surf Shop</title>

@@ -167,6 +167,7 @@
 		}
 		
 		#slide-nav {
+			max-height: calc(100dvh - 120px);
 			background: var(--secondary-color);
 			-webkit-backdrop-filter: blur(100px);
             backdrop-filter: blur(100px);
@@ -191,6 +192,12 @@
 			}
 			& ul {
 				margin: 2rem 0 0;
+			}
+			& a {
+				text-decoration: none;
+				color: var(--primary-darker);
+				font-size: 1.5rem;
+				font-weight: 900;
 			}
 		}
 		#slide-nav.isShown {
@@ -431,6 +438,9 @@
 			& td {
 				height: 35px;
 			}
+		}
+		main {
+			min-height: calc(100dvh - 120px);
 		}
 	}
     @media only screen and (min-width: 874px) {

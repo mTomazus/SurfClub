@@ -73,7 +73,7 @@
 <div class="modal" id="delete-modal" style="display: none;">
     <div class="modal-heading danger"><i class="fa fa-trash"></i> Delete Record</div>
     <div class="modal-body">
-        <?= form_open('lesson_users/submit_delete/'.$update_id) ?>
+        <?= form_open('lessons-users/submit_delete/'.$update_id) ?>
         <p>Are you sure?</p>
         <p>You are about to delete a lesson_user record.  This cannot be undone.  Do you really want to do this?</p> 
         <?php 

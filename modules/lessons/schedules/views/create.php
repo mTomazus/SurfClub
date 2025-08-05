@@ -24,8 +24,6 @@
         echo form_number('available_places', $available_places, array("placeholder" => "Enter available_places"));
         echo form_label('Reserved Places');
         echo form_number('reserved_places', $reserved_places, array("placeholder" => "Enter reserved_places"));
-        echo form_label('Associated Lesson');
-        echo form_dropdown('lessons_id', $lessons_options, $lessons_id);
         echo form_submit('submit', 'Submit');
         echo anchor($cancel_url, 'Cancel', array('class' => 'button alt'));
         echo form_close();

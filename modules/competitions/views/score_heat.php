@@ -1,39 +1,33 @@
+<div id="form-container">
 <form id="score-submit" style="grid-template-columns: auto;" mx-post="competitions/score_submit" mx-animate-success="true" mx-on-success="#load-on">
-    <h2>Judging Heat</h2>
+    <h2 style="margin-bottom:0.5rem">Live Judging</h2>
     <input type="hidden" name="heat_id" required value="<?= $heat_id ?>">
     <input type="hidden" name="judge_id" required value="<?= $user->id ?>">
     
-    <div class="heat_info">
+    <div class="heat_info" style="line-height: 1rem;">
         <div style="align-content:center">
             <?php if ($heat->round === 'Final') {
-                echo '<h1 class="text-center m-0">' . $heat->round . '</h1>';
+                echo '<h1 class="text-center xl m-0">' . $heat->round . '</h1>';
             } else {
-                echo '<h1 class="text-center m-0">' . $heat->round . ' Heat ' . $heat->heat_number . '</h1>';
+                echo '<h1 class="text-center xl m-0">' . $heat->round . ' Heat ' . $heat->heat_number . '</h1>';
             } ?>
-            <h3 class="text-center m-0">Division: <?= $heat->division ?></h3>
-        </div>
-        <div class="time_clock">
+            <h3 class="text-center m-0"><?= $heat->division ?></h3>
+            
             <h2 style="margin: 0;border: none;color: springgreen;">
-                <?php
-                date_default_timezone_set('Europe/Vilnius');
-                $future_time = new DateTime($heat->end_time); // Convert string to DateTime
-                $current_time = new DateTime(); // Get current time
-                if ($future_time > $current_time) {
-                    $interval = $current_time->diff($future_time);
-                    echo $interval->format('%i:%s'); // Outputs MM:SS
-                } else {
-                    echo "00:00"; // Timer has expired
-                }
-                ?>
+                <span id="countdown-timer" data-end-time="<?= $heat->end_time ?>"></span>
             </h2>
+
         </div>
+            
     </div>
+
+    <?= flashdata('<div style="color: black;background: white;padding: 0.5rem;text-align: center;margin:1rem">', '</div>') ?>
 
     <!-- Display Wave Numbers for Each Participant -->
     <div class="wave_numbers">
         <?php foreach ($wave_numbers as $participant_id => $wave_number): ?>
-            <div class="participant_wave">
-                <strong> Next Wave No: <?= $wave_number ?></strong>
+            <div class="participant_wave sm">
+                <strong> Next Wave's No: <?= $wave_number ?></strong>
             </div>
         <?php endforeach; ?>
     </div>
@@ -52,7 +46,25 @@
         endforeach; ?>
     </div>
 
+    <?php if(!preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"])){ ?>
+
+    <div>
+        <div class="box">
+            <input type="range" class="range_input" name="score" id="score_range" min="0" max="10" step="0.2" value="5" onmousemove="rangeSlider(this.value)" ontouchmove="rangeSlider(this.value)">
+            <label for="score_range" class="range_label"><span id="score_value">5</span></label>
+            <script>
+                function rangeSlider(value) {
+                    document.getElementById('score_value').innerText = value;
+                }
+            </script>        
+        </div>
+        <button type="submit" class="score_label submit_button" style="width:100%;font-size:2rem;margin-top:1rem;">Submit</button>
+    </div>
+    
+    <?php } else { ?>
+
     <div class="radio_score">
+        <button type="submit" class="submit_button" style="width:100%;font-size:2rem;grid-column:span 2;">Submit</button>
         <?php
             for ($i = 1; $i <= 10; $i += 0.5) {
                 $id = "score_" . str_replace('.', '_', $i); // Replace '.' with '_' for a valid ID
@@ -60,24 +72,11 @@
                 echo '<label for="' . $id . '" class="score_label">' . $i . '</label>';
             }
         ?>
-        <button type="submit" class="score_label submit_button">Submit</button>
     </div>
-
-    <div mx-get="competitions/judge_scores" mx-trigger="load"></div>
+    
+    <?php } ?>
 
 <?php
-    echo form_close();
-    ?>
-
-<style>
-    main {
-        color: white;
-    }
-    .radio_input {
-        display:none;
-    }
-    .score_input {
-        display:none;
-    }
-
-</style>
+echo form_close();
+?>
+</div>

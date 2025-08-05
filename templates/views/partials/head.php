@@ -21,7 +21,7 @@
     if (strlen($segment) !== 0) {
         $title = ucfirst(segment(2));
     } else {
-        $title = "NEWS";
+        $title = "Vasaros Stovykla";
     }
 ?>
 <title>Molas Surf Club - <?= $title ?></title>

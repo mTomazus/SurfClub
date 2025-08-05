@@ -1,9 +1,9 @@
 <h1><?= out($headline) ?></h1>
 <?php
 flashdata();
-echo '<p>'.anchor('lesson_users/create', 'Create New Lesson_user Record', array("class" => "button"));
+echo '<p>'.anchor('lessons-users/create', 'Create New Lesson_user Record', array("class" => "button"));
 if(strtolower(ENV) === 'dev') {
-    echo anchor('api/explorer/lesson_users', 'API Explorer', array("class" => "button alt"));
+    echo anchor('api/explorer/lessons-users', 'API Explorer', array("class" => "button alt"));
 }
 echo '</p>';
 echo Pagination::display($pagination_data);
@@ -14,7 +14,7 @@ if (count($rows)>0) { ?>
                 <th colspan="5">
                     <div>
                         <div><?php
-                        echo form_open('lesson_users/manage/1/', array("method" => "get"));
+                        echo form_open('lessons-users/manage/1/', array("method" => "get"));
                         echo form_search('searchphrase', '', array("placeholder" => "Search records..."));
                         echo form_submit('submit', 'Search', array("class" => "alt"));
                         echo form_close();
@@ -44,7 +44,7 @@ if (count($rows)>0) { ?>
                 <td><?= out($row->email) ?></td>
                 <td><?= out($row->phone) ?></td>
                 <td><?= date('l jS F Y \a\t H:i',  strtotime($row->registration_date)) ?></td>
-                <td><?= anchor('lesson_users/show/'.$row->id, 'View', $attr) ?></td>        
+                <td><?= anchor('lessons-users/show/'.$row->id, 'View', $attr) ?></td>        
             </tr>
             <?php
             }

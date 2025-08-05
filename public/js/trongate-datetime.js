@@ -56,7 +56,7 @@ async function tgdtFetchDefaultDateFormats(tgdtBaseUrl) {
     http.onerror = function () {
       console.error("Error fetching data from:", targetUrl);
       resolve(
-        '{"default_date_format":"mm/dd/yyyy","default_locale_str":"en-US"}'
+        '{"default_date_format":"dd/mm/yyyy","default_locale_str":"lt-LT"}'
       );
     };
 
@@ -70,7 +70,7 @@ async function tgdtFetchDefaultDateFormats(tgdtBaseUrl) {
       } else {
         console.error("Unexpected HTTP status:", http.status);
         resolve(
-          '{"default_date_format":"mm/dd/yyyy","default_locale_str":"en-US"}'
+          '{"default_date_format":"dd/mm/yyyy","default_locale_str":"en-US"}'
         );
       }
     };
@@ -185,7 +185,7 @@ async function tgdtConvertDefaultDateStrToObj(defaultDateFormatsStr) {
 
       const defaultDateFormat = isValidDateFormat
         ? default_date_format
-        : "mm/dd/yyyy";
+        : "dd/mm/yyyy";
       const defaultLocaleString = isValidDateFormat
         ? default_locale_str
         : "en-US";
@@ -200,7 +200,7 @@ async function tgdtConvertDefaultDateStrToObj(defaultDateFormatsStr) {
       console.error("Error parsing JSON:", error);
 
       const defaultDateFormatsObj = {
-        defaultDateFormat: "mm/dd/yyyy",
+        defaultDateFormat: "yyyy-mm-dd",
         defaultLocaleString: "en-US",
       };
 

@@ -222,7 +222,7 @@ class Trongate_filezone extends Trongate {
         if (is_dir($picture_directory_path)) {
             $pictures = scandir($picture_directory_path);
             foreach ($pictures as $key => $value) {
-                if (($value !== '.') && ($value !== '..') && ($value !== '.DS_Store')) {
+                if (($value !== '.') && ($value !== '..') && ($value !== '.DS_Store') && ($value !== 'thumbnails')) {
                     $data[] = $value;
                 }
             }

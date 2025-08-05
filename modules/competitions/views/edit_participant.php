@@ -1,68 +1,22 @@
 <h2>Edit participant</h2>
 <div id="response"></div>
-<form mx-post="competitions/submit_create_participant/<?= $id ?>" mx-target="#response">
+<form mx-post="competitions/submit_create_participant/<?= $id ?>" mx-target="#response" mx-close-on-success="true" mx-on-success="#participants-list">
+    <input type="hidden" name="id" value="<?= $id ?>">
 <?php
     echo form_input('first_name', $first_name);
     echo form_input('last_name', $last_name);
     echo form_input('email', $email);
-
-    $options = array(); // Initialize empty array
-    foreach ($rows as $row) { 
-        $options[$row->id] = $row->name . ' ' . $row->year;
+    echo form_hidden('comp_id', $row->id);
+    $division_options = [];
+    foreach ($divisions as $division) {
+        $division_options[$division->id] = $division->name;
     }
-    echo form_dropdown('comp_id', $options);
-
-    $genders = ['Male' => 'Male', 'Female' => 'Female'];
-    echo form_dropdown('gender', $genders);
-    $groups = ['U12' => 'Under 12', 'U15' => 'Under 15', 'U18' => 'Under 18', 'ADT' => 'Adult', 'VET' => 'Veteran'];
-    echo form_dropdown('age_group', $groups);
+    echo form_dropdown('division_id', $division_options, $division_id  );
 ?>
     <div class="modal-footer">
         <button type="submit" class="modal-submit" name="update">update</button>
-        <button class="close" onclick="closeModal()">Cancel</button>
-        <button class="modal-delete" mx-delete="competitions/submit_delete_participant/<?= $id ?>">delete</button>
+        <button class="close" onclick="closeModal()">close</button>
     </div>
 <?php
     echo form_close();
 ?>
-<style>
-    h3 {
-        padding: 0.5rem;
-    }
-    #response {
-        background: lawngreen;
-        margin: 1rem;
-        color: black;
-    }
-    .modal-footer {
-        grid-column: 1 / span 2;
-        background: none;
-        border: none;
-        justify-content: space-evenly;
-    }
-    .close {
-        background: none;
-        border: 2px solid skyblue;
-        box-shadow: 0 0 10px skyblue;
-        color: skyblue;
-        font-family:inherit;
-    }
-    .modal-delete:hover {
-        background:red;
-        border:2px solid white;
-        color:white;
-        transition: all 0.5s;
-    }
-    .close:hover {
-        background:skyblue;
-        border:2px solid white;
-        color:black;
-        transition: all 0.5s;
-    }
-    .modal-submit:hover {
-        background:white;
-        border:2px solid black;
-        color:black;
-        transition: all 0.5s;
-    }
-</style>

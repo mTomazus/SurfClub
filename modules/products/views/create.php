@@ -23,8 +23,8 @@
         echo form_label('Discount price');
         echo form_input('discount_price', $discount_price, ["placeholder" => "Enter discount price"]);
 
-        echo form_label('Stock');
-        echo form_dropdown('stock', ['1' => 'Yes', '0' => 'No'], $in_stock);
+        echo form_label('In Stock');
+        echo form_dropdown('in_stock', ['1' => 'Yes', '0' => 'No'], $in_stock);
 
         echo form_label('Status');
         echo form_dropdown('status', ['active' => 'Active', 'inactive' => 'Inactive'], $status);
@@ -45,6 +45,8 @@
 
         echo form_label('Variant 3');
         echo form_input('variants[]', '', ["placeholder" => "e.g., Size: XL"]);
+
+        echo form_hidden('image', $image);
 
         echo form_submit('submit', 'Submit');
         echo anchor($cancel_url, 'Cancel', ['class' => 'button alt']);

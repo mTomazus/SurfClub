@@ -4,6 +4,12 @@ class Lessons extends Trongate {
     private $default_limit = 20;
     private $per_page_options = array(10, 20, 50, 100);    
 
+    public function thankyou(): void {
+        $data['headline'] = 'Thank You';
+        $data['view_file'] = 'thankyou';
+        $this->template('public', $data);
+    }
+
     /**
      * Display a webpage with a form for creating or updating a record.
      */
@@ -104,6 +110,7 @@ class Lessons extends Trongate {
      * @return void
      */
     public function submit(): void {
+        
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
 

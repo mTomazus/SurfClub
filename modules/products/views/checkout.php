@@ -44,12 +44,29 @@
                 echo form_label('Vardas Pavardė');
                 echo form_input('customer_name', post('customer_name', true));
                 echo validation_errors('customer_name');
+                echo form_label('Telefonas');
+                echo form_input('phone', post('phone', true));
+                echo validation_errors('phone');
                 echo form_label('Emailas');
                 echo form_input('email', post('email', true));
                 echo validation_errors('email');
-                echo form_label('Adresas');
-                echo form_input('address', post('address', true));
+                echo form_label('Pasirinkite atsiėmimo būdą');
+                echo '<div class="delivery" style="align-items:center">';
+                echo form_radio('delivery', 'atsiėmimas', true, ['id' => 'option1-input']);
+                echo form_label('Parduotuvėje Vėtros g. 8', ['for' => 'option1-input']);
+                echo form_radio('delivery', 'omniva', false, ['id' => 'option2-input']);
+                echo form_label('<img src="https://www.omniva.lt/wp-content/themes/omniva/assets/dist/assets/img/logo/logo-sign.svg">Omniva paštomate', ['for' => 'option2-input', 'style' => 'gap:0.5rem; display:flex;']);
+                echo '<div class="omniva">';
+                echo form_label('Pasirinkite jums patogų paštomatą');
+                $options = [];
+                foreach ($locations as $location) {
+                    if ($location['TYPE'] === '0' && $location['A0_NAME'] === 'LT') {
+                        $options[$location['ZIP']] = $location['NAME'];
+                    }
+                }
+                echo form_dropdown('address', $options, post('address', true), ['class' => 'dropdown']);
                 echo validation_errors('address');
+                echo '</div></div>';
                 echo '<div class="d-flex" style="align-items:center">';
                 echo form_checkbox('sutikimas', 1, post('sutikimas', true));
                 echo form_label('Pažymėdamas langelį patvirtinu, kad ir sutinku su Sąlygomis bei Prekių ir pinigų grąžinimo tvarka.');
@@ -63,6 +80,54 @@
 </div>
 
 <style>
+#option2-input, #option1-input {
+    display: none;
+}
+.delivery {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    & label {
+        padding: 0.5rem;
+        border: 1px solid;
+        margin: 0 auto;
+        border-radius: 5px;
+    }
+    & img {
+        width: 15px;
+        height:15px;
+        margin:auto;
+    }
+}
+
+.delivery label:hover {
+    background: #f0f0f0;
+    cursor: pointer;
+}
+.delivery input:checked + label {
+    background: #f0f0f0;
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 5px var(--primary);
+    cursor: pointer;
+}
+.delivery input:checked + label:hover {
+    background: #f0f0f0;
+    cursor: pointer;
+}
+#option2-input:checked ~ .omniva {
+    display: block;
+}
+.omniva {
+    display: none;
+    grid-column: 1 / span 2;
+    & label {
+        margin: 1.4em 0 0.4em 0;
+        clear: both;
+        display: block;
+        text-align: left;
+        border: none;
+        padding: 0;
+    }
+}
 
 .summary {
     display:grid;

@@ -1,9 +1,9 @@
 <h1><?= out($headline) ?></h1>
 <?php
 flashdata();
-echo '<p>'.anchor('lesson_schedules/create', 'Create New Lesson Schedule Record', array("class" => "button"));
+echo '<p>'.anchor('lessons-schedules/create', 'Create New Lesson Schedule Record', array("class" => "button"));
 if(strtolower(ENV) === 'dev') {
-    echo anchor('api/explorer/lesson_schedules', 'API Explorer', array("class" => "button alt"));
+    echo anchor('api/explorer/lessons-schedules', 'API Explorer', array("class" => "button alt"));
 }
 echo '</p>';
 echo Pagination::display($pagination_data);
@@ -14,7 +14,7 @@ if (count($rows)>0) { ?>
                 <th colspan="7">
                     <div>
                         <div><?php
-                        echo form_open('lesson_schedules/manage/1/', array("method" => "get"));
+                        echo form_open('lessons-schedules/manage/' . $row->id . '/', array("method" => "get"));
                         echo form_search('searchphrase', '', array("placeholder" => "Search records..."));
                         echo form_submit('submit', 'Search', array("class" => "alt"));
                         echo form_close();
@@ -46,7 +46,7 @@ if (count($rows)>0) { ?>
                 <td><?= out($row->start_time) ?></td>
                 <td><?= out($row->available_places) ?></td>
                 <td><?= out($row->reserved_places) ?></td>
-                <td><?= anchor('lesson_schedules/show/'.$row->id, 'View', $attr) ?></td>        
+                <td><?= anchor('lessons-schedules/show/'.$row->id, 'View', $attr) ?></td>        
             </tr>
             <?php
             }

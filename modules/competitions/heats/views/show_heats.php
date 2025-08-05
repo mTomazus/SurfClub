@@ -1,6 +1,6 @@
 <div id="just-heats">
     <h2>All Competition Heats</h2>
-    <div class="legend">      
+    <div class="legend mb-2">      
         <h4>Legend:</h4>
         <h4>finished</h4>
         <h4>running</h4>

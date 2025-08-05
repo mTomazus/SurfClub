@@ -39,8 +39,8 @@
                     <div><?= out($price) ?></div>
                 </div>
                 <div class="row">
-                    <div>stock</div>
-                    <div><?= out($stock) ?></div>
+                    <div>in stock</div>
+                    <div><?= out($in_stock) ?></div>
                 </div>
                 <div class="row">
                     <div>status</div>

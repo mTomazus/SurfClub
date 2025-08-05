@@ -5,7 +5,11 @@
 
 	<body>
 
-		<header><?= Template::partial('partials/judges_header', $data) ?></header> 
+		<header><?= Template::partial('partials/judges_header', $data) ?></header>
+		
+		<?= Template::partial('partials/judges_slide', $data) ?>
+		
+		<aside><?= Template::partial('partials/judges_aside', $data) ?></aside>
 		
 		<main class="judges_area"><?= Template::display($data) ?></main>
 		

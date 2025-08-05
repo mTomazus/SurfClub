@@ -25,7 +25,7 @@
             <?php if (!empty($participant['scores'])) {
                     foreach ($participant['scores'] as $score) {
                         ?>
-                        <td><?= out($score['avg_score']) ?></td>
+                        <td class="tooltips"><?= out($score['avg_score']) ?></td>
             <?php } 
         } else {
             echo "<td colspan='2'>No Scores Available</td></tr>";

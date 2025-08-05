@@ -13,7 +13,24 @@ class Enquiries extends Trongate {
         $data['view_module'] = 'enquiries';
         $data['view_file'] = 'contact_form';
         $this->template($this->template_to_use, $data);
-    } 
+    }
+
+    function show_all() {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed('');
+
+        $records_obj = $this->model->get('date_created desc', 'enquiries');
+        if ($records_obj) {
+            $data['enquiries'] = (array) $records_obj;
+        } else {
+            $data['enquiries'] = [];
+        }
+
+        $data['title'] = 'Enquiries';
+        $data['view_module'] = 'enquiries';
+        $data['view_file'] = 'show_all';
+        $this->template('admin_area', $data);
+    }
 
     //change these to whatever take your fancy
     function _get_question() {
@@ -134,13 +151,13 @@ class Enquiries extends Trongate {
 
         if ($submit == 'Submit') {
 
-            $this->validation_helper->set_rules('name', 'Name', 'required|min_length[2]|max_length[255]');
-            $this->validation_helper->set_rules('phone', 'Phone Number', 'required|min_length[5]|max_length[15]');
-            $this->validation_helper->set_rules('email_address', 'Email Address', 'required|min_length[5]|max_length[255]|valid_email_address|valid_email');
-            $this->validation_helper->set_rules('message', 'Message', 'required|min_length[2]');
-            // $this->validation_helper->set_rules('answer', 'prove you are human answer', 'required|callback_answer_check');
+            $this->validation->set_rules('name', 'Name', 'required|min_length[2]|max_length[255]');
+            $this->validation->set_rules('phone', 'Phone Number', 'required|min_length[5]|max_length[15]');
+            $this->validation->set_rules('email_address', 'Email Address', 'required|min_length[5]|max_length[255]|valid_email_address|valid_email');
+            $this->validation->set_rules('message', 'Message', 'required|min_length[2]');
+            // $this->validation->set_rules('answer', 'prove you are human answer', 'required|callback_answer_check');
 
-            $result = $this->validation_helper->run();
+            $result = $this->validation->run();
 
             if ($result == true) {
                 $data = $this->_get_data_from_post();

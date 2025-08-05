@@ -9,9 +9,17 @@
 <base href="<?= BASE_URL ?>">
 <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link href="https://fonts.cdnfonts.com/css/silom" rel="stylesheet">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/trongate.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/app.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/public.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/judges.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/trongate-datetime.css">
-<title>Molas Surf Club - Judging</title>
+<script>
+    function toggleSubMenu(element) {
+        const subMenu = element.nextElementSibling;
+        subMenu.classList.toggle('show');
+        element.classList.toggle('rotate');
+    }
+</script>
+<title>Molas Surf Judge</title>
