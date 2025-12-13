@@ -343,8 +343,10 @@
             // Build filter array
             $where = [];
             $conditions = [];
-            $sql = "SELECT p.*, c.name, c.year FROM comp_participants p
+            $sql = "SELECT p.*, c.name, c.year, c.entry_type, cu.name, cu.email 
+                    FROM comp_participants p
                     JOIN comp_name c ON p.comp_id = c.id
+                    LEFT JOIN comp_users cu ON p.user_id = cu.id
                     WHERE c.status = 'open'";
 
             if ($show_only != '') {
@@ -405,6 +407,16 @@
                 echo '<p style="color: black;background: orange;text-align: center;padding: 0.5rem;">Form fields have to be filled!</p>';
             
             }
+        }
+
+        function confirm_participant() {
+            $this->module('trongate_security');
+            $this->trongate_security->_make_sure_allowed('judges area');
+
+            $record_id = (int) segment(3);
+
+            $data['status'] = 'confirmed';
+            $this->model->update($record_id, $data, 'comp_participants');
         }
 
         private function get_comp_only() {
@@ -469,7 +481,7 @@
 
             $user_id = $this->_get_organizer_user_id();
 
-            $sql = "SELECT * FROM comp_name WHERE NOT status = 'finished' AND user_id = $user_id ORDER BY id DESC";
+            $sql = "SELECT * FROM comp_name WHERE NOT status = 'finished' AND organizer_id = $user_id ORDER BY id DESC";
             $data['rows'] = $this->model->query($sql, 'object');
 
             $data['num_rows'] = count($data['rows']);
@@ -497,7 +509,7 @@
                 $data['location'] = post('location', true);
                 
                 $user_id = $this->_get_organizer_user_id();
-                $data['user_id'] = $user_id; // Set
+                $data['organizer_id'] = $user_id; // Set
 
                 $divisions = post('divisions', true);
 
@@ -575,7 +587,7 @@
                 }
             }
 
-            $comp = $this->model->get_many_where('user_id', $user_id, 'comp_name');
+            $comp = $this->model->get_many_where('organizer_id', $user_id, 'comp_name');
             return $comp;
         }
 
@@ -603,7 +615,7 @@
             $user = $this->_get_judge_info();
             $user_id = (int)$user->trongate_user_id;
 
-            $tables = ['comp_judges', 'comp_users'];
+            $tables = ['comp_judges', 'comp_organizations'];
             $user_obj = false;
 
             foreach ($tables as $table) {
@@ -746,8 +758,8 @@
         }
 
         function _get_user_data($username) {
-            // Get user data from comp_judges or comp_users table.
-            $tables = ['comp_judges', 'comp_users'];
+            // Get user data from comp_judges or comp_organizations table.
+            $tables = ['comp_judges', 'comp_organizations'];
             $member_obj = false;
 
             foreach ($tables as $table) {
@@ -841,7 +853,7 @@
             $this->module('trongate_tokens');
             $trongate_user_id = $this->trongate_tokens->_get_user_id();
 
-            $tables = ['comp_judges', 'comp_users'];
+            $tables = ['comp_judges', 'comp_organizations'];
             $judge_info = false;
 
             foreach ($tables as $table) {

@@ -27,6 +27,10 @@ class Templates extends Trongate {
         load('admin_area', $data);
     }
 
+    function users_area($data): void {
+        load('users_area', $data);
+    }
+
     /**
      * Loads the 'error_404' view with provided data.
      *

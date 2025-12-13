@@ -1,7 +1,7 @@
 <?php $user_info = Modules::run("competitions/_get_judge_info") ?>
 <div id="header-sm">
     <div class="logo-pic">
-        <img src="images/logo.png" alt="logo surf club">
+        <img src="competitions-users_module/images/logo-comp-white.png" alt="logo surf club">
     </div>
     <div class="logo">
         <a href="competitions">Judges<br><h6 style="padding: 0; margin: -5px; font-size: 0.5rem;">ver. 1.05</h6></a>
@@ -15,7 +15,7 @@
 
 <div id="header-lg">
     <div class="logo-pic">
-        <img src="images/logo.png" alt="logo surf club">
+        <img src="competitions-users_module/images/logo-comp-white.png" alt="logo surf club">
     </div>
     <div class="logo">
         <a href="competitions">Judge's Area<br><h6 class="" style="padding: 0; margin: -5px;text-transform:lowercase;font-size: 0.5rem;">ver 1.05</h6></a>

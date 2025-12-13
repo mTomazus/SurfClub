@@ -38,13 +38,26 @@
     <div id="participants-list" class="mt-1" mx-get="competitions/show_participants" mx-target="#participants-list" mx-select="#participants-list" mx-trigger="load">
         <?php foreach ($rows as $row) { ?>
                 <ul>
-                    <li><?= out($row->first_name) ?></li>
-                    <li><?= out($row->last_name) ?></li>
+                    <li><?= out($row->name) ?></li>
                     <li><?= out($row->gender_age) ?></li>
                     <?php $user_info = Modules::run("competitions/_get_judge_info");
-                    if ($user_info->role === 'admin') { ?>
-                    <button mx-build-modal='{"id": "participant-modal"}' mx-get="competitions/edit_participant/<?= $row->id ?>"><i class="fa fa-pencil" aria-hidden="true"></i></button>
-                    <button class="danger" style="color:red" mx-delete="competitions/submit_delete_participant/<?= $row->id ?>" mx-on-success="#participants-list"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
+                    if ($user_info->role === 'admin') { 
+                        if ($row->status === 'pending') {
+                            if ($row->entry_type === 'free entry') { ?>
+                                <li style="color: orange;">( pending approval )</li>
+                                <button mx-post="competitions/confirm_participant/<?= $row->id ?>" mx-on-success="#participants-list"><i class="fa fa-ticket" aria-hidden="true"></i> Confirm</button>
+                            <?php } else { ?>
+                                <li style="color: orange;">( pending payment )</li>
+                            <?php } ?>
+                        <?php } else if ($row->status === 'paid') { ?>
+                                <li style="color: orange;">( payment received )</li>
+                                <button mx-post="competitions/confirm_participant/<?= $row->id ?>" mx-on-success="#participants-list"><i class="fa fa-ticket" aria-hidden="true"></i> Confirm</button>
+                        <?php } else { ?>
+                            <li style="color: lawngreen;">( confirmed )</li>
+                        <?php } ?>
+
+                        <button mx-build-modal='{"id": "participant-modal"}' mx-get="competitions/edit_participant/<?= $row->id ?>"><i class="fa fa-pencil" aria-hidden="true"></i></button>
+                        <button class="danger" style="color:red" mx-delete="competitions/submit_delete_participant/<?= $row->id ?>" mx-on-success="#participants-list"><i class="fa fa-trash-o" aria-hidden="true"></i></button>
                     <?php } ?>
                 </ul>
         <?php } ?>
