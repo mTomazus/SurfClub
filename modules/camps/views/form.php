@@ -24,7 +24,7 @@
             <?php foreach($rows as $row): 
                 $pam = $row->pamaina.'.  '.$row->start.' - '.$row->end;
                 $disabled = ($row->status !== 'active') ? 'disabled' : '';
-                $label = $pam;
+                $label = $pam . ' ~ ' . $row->price . ' Eur.';
                 if ($row->status === 'ended') {
                     $label .= ' (baigėsi)';
                 } elseif ($row->status !== 'active') {

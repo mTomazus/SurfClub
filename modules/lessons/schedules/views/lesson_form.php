@@ -2,7 +2,7 @@
 <?php
 
 $form_attr = [
-    'mx-post' => 'lessons-schedules/submit/' . $id ,
+    'mx-post' => 'lessons-schedules/submit/' . ($id ?? ''),
     'mx-on-success' => '#lessons-container',
     'mx-close-on-success' => 'true',
     'mx-animate-success' => 'true',

@@ -5,4 +5,7 @@
     <a style="text-transform:uppercase;" mx-get="test/instagram" mx-target="#form-container" mx-select="#table" mx-select-oob="#title:#top-title">Social</a>
     <a style="text-transform:uppercase;" mx-get="enquiries/show_all" mx-target="#form-container" mx-select="#table" mx-select-oob="#title:#top-title">Enquiries</a>
     <a style="text-transform:uppercase;" mx-get="events" mx-target="#form-container" mx-select="#event-container" mx-select-oob="#title:#top-title">Planned Events</a>
+    <a style="text-transform:uppercase;" mx-get="products/manage" mx-target="#form-container" mx-select="main" mx-select-oob="#title:#top-title">Manage Products</a>
+    <a style="text-transform:uppercase;" mx-get="galleries/manage" mx-target="#form-container" mx-select="main" mx-select-oob="#title:#top-title">Manage Galleries</a>
+    <a style="text-transform:uppercase;" mx-get="news/manage" mx-target="#form-container" mx-select="main" mx-select-oob="#title:#top-title">Manage News</a>
 </div>

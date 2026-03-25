@@ -5,6 +5,9 @@
 	<button mx-get="lessons-schedules/lesson_form" mx-build-modal='{
 		"id": "lesson-modal",
 		"modalHeading": "Create New Lesson Schedule"}'>Create New Lesson</button>
+	<button class="primary" mx-get="lessons-schedules/bulk_lesson_form" mx-build-modal='{
+		"id": "bulk-lesson-modal",
+		"modalHeading": "Add Lessons for Multiple Days"}'>Add Bulk Lessons</button>
 	<h2 class="mt-1 mb-1">Current Schedules</h2>	
 	<div id="information"></div>
 	<div id="loading-lessons" class="mt-3 mx-indicator"></div>

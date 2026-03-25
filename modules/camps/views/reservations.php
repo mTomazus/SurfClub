@@ -8,7 +8,7 @@
         <?php
         // Define the options for the dropdown menu
             $pamainos = [
-                '' => 'Visos Pamainos',
+                '' => 'Visos Pamainos', '1' => '1 Pamaina', '2' => '2 Pamaina',
                 '3' => '3 Pamaina', '4' => '4 Pamaina',
                 '5' => '5 Pamaina', '6' => '6 Pamaina', '7' => '7 Pamaina', '8' => '8 Pamaina',
                 '9' => '9 Pamaina', '10' => '10 Pamaina', '11' => '11 Pamaina', '12' => '12 Pamaina'

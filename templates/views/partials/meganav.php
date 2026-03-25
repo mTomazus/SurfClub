@@ -23,7 +23,7 @@
             <span>Apie mus</span>
             <ul>
                 <li><a href="kontaktai/">Kontaktai</a></li>
-                <li><a href="#">Komanda</a></li>
+                <li><a href="komanda/">Komanda</a></li>
                 <li><a href="#">Karjera</a></li>
                 <li><a href="parama/">Parama</a></li>
             </ul>

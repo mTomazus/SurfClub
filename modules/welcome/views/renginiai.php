@@ -15,12 +15,80 @@
     <!--------------------------------          WRAPPER              ------------------------>
     <div class="container-xxl wrapper">
 
+        <!--------------------------------             upcoming events              ------------------------>
+        <div class="upcoming-events">
+            <p>Artimiausi renginiai</p>
+        </div>
+        <div class="event-content upcoming">
+            <div class="outer">
+                <a href="#">
+                    <div class="img-container">
+                        <img width="600" height="600" src="images/renginiai/msc2026.webp" alt="molas surf 2026" decoding="async" fetchpriority="high" srcset="images/renginiai/msc2026.webp 600w, 150x150.jpg 150w, 100x100.jpg 100w, 32x32.jpg 32w" sizes="(max-width: 600px) 100vw, 600px">
+                    </div>
+                    <div class="text-container">
+                        <h2>Molas Surf Club 2026</h2>
+                        Draugiškos sporto klubo vidinės varžybos pаminint vasaros sezono pradžią.                           
+                        <div class="text-meta">
+                            <div class="col-4">
+                                <i class="fa fa-flag-o mr-1"></i>varžybos
+                            </div>
+                            <div class="col-4">
+                                <i class="fa fa-calendar mr-1"></i>Soon
+                            </div>
+                            <div class="col-4"></div>
+                        </div>    
+                    </div>
+                </a>
+            </div>
+            <div class="outer">
+                <a href="#">
+                    <div class="img-container">
+                        <img width="600" height="600" src="images/renginiai/ljc2026.webp" alt="molas junior" decoding="async" fetchpriority="high" srcset="images/renginiai/ljc2026.webp 600w, 150x150.jpg 150w, 100x100.jpg 100w, 32x32.jpg 32w" sizes="(max-width: 600px) 100vw, 600px">
+                    </div>
+                    <div class="text-container">
+                        <h2>Molas Surf Junior 2026</h2>
+                        Čia susirinks jauni banglenčių sportininkai iš visos Lietuvos ir užsienio, kad varžytųsi dėl nugalėtojo titulo.                           
+                        <div class="text-meta">
+                            <div class="col-4">
+                                <i class="fa fa-flag-o mr-1"></i>varžybos
+                            </div>
+                            <div class="col-4">
+                                <i class="fa fa-calendar mr-1"></i>liep mėn.
+                            </div>
+                            <div class="col-4"></div>
+                        </div>    
+                    </div>
+                </a>
+            </div>
+            <div class="outer">
+                <a href="#">
+                    <div class="img-container">
+                        <img width="600" height="600" src="images/renginiai/mlbc2026.webp" alt="longboard" decoding="async" fetchpriority="high" srcset="images/renginiai/mlbc2026.webp 600w, 150x150.jpg 150w, 100x100.jpg 100w, 32x32.jpg 32w" sizes="(max-width: 600px) 100vw, 600px">
+                    </div>
+                    <div class="text-container">
+                        <h2>Molas Longboard Classic 2026</h2>
+                        Prestižinė ilgų lentų varžybų serija, puiki proga palaikyti savo mėgstamus sportininkus.
+                        <div class="text-meta">
+                            <div class="col-4">
+                                <i class="fa fa-flag-o mr-1"></i>varžybos
+                            </div>
+                            <div class="col-4">
+                                <i class="fa fa-calendar mr-1"></i>rugp mėn.
+                            </div>
+                            <div class="col-4"></div>
+                        </div>                           
+                    </div>
+                </a>
+            </div>
+        </div>
+
     <!--------------------------------              TEXT              ------------------------>
-    <div id="event-text">
+    <div class="past-events">
+        <p>Praeities renginiai</p>
     </div>
 
-    <!--------------------------------            CONTENT             ------------------------>
-    <div id="event-content">
+    <!--------------------------------           PAST EVENTS CONTENT             ------------------------>
+    <div class="event-content past">
         <div class="outer">
             <a href="competitions-heats/show_heats_draw/5">
                 <div class="img-container">
@@ -81,7 +149,6 @@
                 </div>
             </a>
         </div>
-        
     </div>
     <!--------------------------------            PARTNERS             ------------------------>
     <div class="event-partners">
@@ -133,18 +200,41 @@
         z-index: 2;
         text-shadow: 0 10px 15px rgba(0,0,0,.1);
     }
-    #event-content {
+    .event-content.past {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+    .event-content {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 1rem;
         padding: 1rem 0;
     }
-    #event-content .img-container {
+    .event-content .img-container {
         position: relative;
         overflow: hidden;
         width: 100%;
         height: 0;
         padding-bottom: 100%; /* Square aspect ratio */
+    }
+    .past-events, .upcoming-events {
+        & p {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: whitesmoke;
+        }
+        ::after {
+            content: '';
+            display: inline-block;
+            width: 100px;
+            height: 2px;
+            background-color: whitesmoke;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
     }
     .outer {
         position: relative;

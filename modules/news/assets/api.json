@@ -43,28 +43,32 @@
       }
     ]
   },
+
   "Count": {
     "url_segments": "api/count/news",
     "request_type": "GET",
     "description": "Count number of records",
-    "enableParams": true
+    "enableParams": true,
+    "authorization": "*"
   },
+
   "Count By Post": {
     "url_segments": "api/count/news",
     "request_type": "POST",
     "description": "Count number of records using POST request",
     "enableParams": true,
-    "authorization":{  
-        "roles": [
-            "admin"
-        ]
-    }
+    "authorization":"*"
   },
   "Create": {
     "url_segments": "api/create/news",
     "request_type": "POST",
     "description": "Insert database record",
-    "enableParams": true
+    "enableParams": true,
+    "authorization":{  
+      "roles": [
+          "member"
+      ]
+    }
   },
   "Insert Batch": {
     "url_segments": "api/batch/news",
@@ -82,7 +86,12 @@
         "name": "id",
         "label": "ID"
       }
-    ]
+    ],
+    "authorization":{  
+      "roles": [
+          "member"
+      ]
+    }
   },
   "Destroy": {
     "url_segments": "api/destroy/news",

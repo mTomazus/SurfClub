@@ -101,6 +101,11 @@ class Welcome extends Trongate {
 		$data['view_file'] = 'nuoma';
 		$this->template('public', $data);
 	}
+	public function komanda(): void {
+		$data['view_module'] = 'welcome';
+		$data['view_file'] = 'komanda';
+		$this->template('public', $data);
+	}
     public function stovykla_modal() {
         echo '<p>stovyklos registracijos modalas</p>';
     }

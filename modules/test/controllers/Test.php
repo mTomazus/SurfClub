@@ -17,6 +17,8 @@ class Test extends Trongate {
 
     function port() {
 
+        $this->module('trongate_tokens');
+        $token = $this->trongate_tokens->_attempt_get_valid_token();
         $data['token'] = $token;
         $data['vanduo'] = $this->vanduo();
         $data['view_file'] = 'port';

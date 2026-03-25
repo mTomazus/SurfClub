@@ -405,6 +405,26 @@ main{
         margin-top: 1em;
     }
 
+    #bulk-lesson-modal form {
+        & label {
+            font-family: Krungthep;
+        }
+        & label:has(> input[type='checkbox']) {
+            background-color: transparent;
+            padding: 0.5em;
+            border-radius: 5px;
+            border: 1px solid var(--clr-border-primary);
+        }
+        & input[type='checkbox'] {
+            display: none;
+        }
+        & label:has(> input[type='checkbox']):hover, & label:has(> input[type='checkbox']):has(> input[type='checkbox']:checked) {
+            background: var(--bg-clr-primary);
+            color: var(--txt-clr-primary);
+            border: 1px solid var(--clr-border-secondary);
+        }
+    }
+
     /* ----------------- Media queries ----------------- */
     /* ------------------------------------------------- */
     @media only screen and (max-width: 855px) {

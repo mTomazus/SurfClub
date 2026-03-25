@@ -41,8 +41,8 @@ class Schedules extends Trongate {
         } else {
             $data = $this->get_data_from_post();
         }
-
         $data['lessons'] = $this->model->get('id', 'lessons');
+                
 
         if (from_trongate_mx() === true) {
             $this->view('lesson_form', $data);
@@ -71,6 +71,84 @@ class Schedules extends Trongate {
 
     	http_response_code(200);
     	echo '<p>Lesson' . $update_id . ' dated ' . $lesson_date . ' ' . $lesson_time . ' was successfully deleted from the database.</p>';
+    }
+
+    public function bulk_lesson_form(): void {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $data['lessons'] = $this->model->get('id', 'lessons');
+
+        if (from_trongate_mx() === true) {
+            $this->view('bulk_lesson_form', $data);
+        } else {
+            $data['view_file'] = 'bulk_lesson_form';
+            $this->template('admin_area', $data);
+        }
+    }
+
+    public function submit_bulk(): void {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $this->validation->set_rules('lesson_id', 'lesson_id', 'required|max_length[11]|numeric');
+        $this->validation->set_rules('date_from', 'date_from', 'required|valid_date');
+        $this->validation->set_rules('date_to', 'date_to', 'required|valid_date');
+        $this->validation->set_rules('start_time', 'start_time', 'required|valid_time');      
+        $this->validation->set_rules('available_places', 'available_places', 'required|max_length[11]|numeric');
+        $this->validation->set_rules('reserved_places', 'reserved_places', 'required|max_length[11]|numeric');
+        $result = $this->validation->run();
+        if ($result === false) {
+            http_response_code(400);
+            echo validation_error(400);
+            return;
+        }
+
+        $lesson_id      = post('lesson_id', true);
+        $date_from      = post('date_from', true);
+        $date_to        = post('date_to', true);
+        $start_time     = post('start_time', true);
+        $available      = (int) post('available_places', true);
+        $reserved       = (int) post('reserved_places', true);
+        $selected_days  = $_POST['days'] ?? [];
+
+        $from  = strtotime($date_from);
+        $to    = strtotime($date_to);
+
+        if ($from === false || $to === false || $to < $from) {
+            http_response_code(400);
+            echo '<p>Invalid date range.</p>';
+            return;
+        }
+
+        $day_map = ['Mon' => 1, 'Tue' => 2, 'Wed' => 3, 'Thu' => 4, 'Fri' => 5, 'Sat' => 6, 'Sun' => 0];
+        $allowed_dow = [];
+        foreach ($selected_days as $d) {
+            if (isset($day_map[$d])) {
+                $allowed_dow[] = $day_map[$d];
+            }
+        }
+
+        $count   = 0;
+        $current = $from;
+        while ($current <= $to) {
+            $dow = (int) date('w', $current);
+            if (in_array($dow, $allowed_dow)) {
+                $record = [
+                    'lesson_id'        => $lesson_id,
+                    'date'             => date('Y-m-d', $current),
+                    'start_time'       => $start_time,
+                    'available_places' => $available,
+                    'reserved_places'  => $reserved,
+                ];
+                $this->model->insert($record, 'lesson_schedules');
+                $count++;
+            }
+            $current = strtotime('+1 day', $current);
+        }
+
+        http_response_code(200);
+        echo '<p>' . $count . ' lesson schedule(s) created successfully.</p>';
     }
 
     /**
