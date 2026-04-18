@@ -25,7 +25,11 @@
         <div class="card-body">
             <div class="record-details">
                 <div class="row">
-                    <div>pamaina</div>
+                    <div>Year</div>
+                    <div><?= out($year) ?></div>
+                </div>
+                <div class="row">
+                    <div>Session</div>
                     <div><?= out($pamaina) ?></div>
                 </div>
             </div>

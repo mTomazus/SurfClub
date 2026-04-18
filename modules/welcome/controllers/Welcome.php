@@ -55,8 +55,21 @@ class Welcome extends Trongate {
     public function admin(): void {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
+
+        $data['stats'] = [
+            'camps'     => $this->model->count('camps'),
+            'coupons'   => $this->model->count('coupons'),
+            'events'    => $this->model->count('events'),
+            'enquiries' => $this->model->count('enquiries'),
+            'products'  => $this->model->count('products'),
+            'news'      => $this->model->count('news'),
+            'galleries' => $this->model->count('galleries'),
+        ];
+        $data['recent_camps'] = $this->model->get('id DESC', 'camps', 5);
+
         $data['view_module'] = 'welcome';
         $data['view_file'] = 'admin';
+        $data['title'] = 'Dashboard';
         $this->template('admin_area', $data);
     }
 	public function varzybos(): void {

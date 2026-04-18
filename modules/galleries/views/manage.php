@@ -28,8 +28,9 @@ if (count($rows)>0) { ?>
                 </th>
             </tr>
             <tr>
-                <th>pamaina</th>
-                <th style="width: 20px;">Action</th>            
+                <th>Year</th>
+                <th>Session</th>
+                <th style="width: 20px;">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -37,8 +38,9 @@ if (count($rows)>0) { ?>
             $attr['class'] = 'button alt';
             foreach($rows as $row) { ?>
             <tr>
+                <td><?= out($row->year) ?></td>
                 <td><?= out($row->pamaina) ?></td>
-                <td><?= anchor('galleries/show/'.$row->id, 'View', $attr) ?></td>        
+                <td><?= anchor('galleries/show/'.$row->id, 'View', $attr) ?></td>
             </tr>
             <?php
             }

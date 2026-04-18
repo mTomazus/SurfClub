@@ -4,13 +4,28 @@ class Galleries extends Trongate {
     private $default_limit = 10;
     private $per_page_options = array(10, 20, 50, 100);
     
+    public function index(): void {
+        $sql = 'SELECT * FROM galleries ORDER BY year DESC, pamaina ASC';
+        $all_galleries = $this->model->query($sql, 'object');
+        $data['galleries_by_year'] = [];
+        foreach ($all_galleries as $gallery) {
+            $data['galleries_by_year'][$gallery->year][] = $gallery;
+        }
+        $data['view_file'] = 'public_index';
+        $this->template('public', $data);
+    }
+
     public function pamaina(): void {
             $this->module('trongate_filezone');
-            $camp = (int) segment(3);
-            $pamaina = $this->model->get_one_where('pamaina', $camp, 'galleries');
-            
+            $year = (int) segment(3);
+            $camp = (int) segment(4);
+
+            $sql = 'SELECT * FROM galleries WHERE year = ? AND pamaina = ? LIMIT 1';
+            $result = $this->model->query_bind($sql, [$year, $camp], 'object');
+            $pamaina = $result[0] ?? false;
+
             if ($pamaina === false) redirect('error_404');
-            
+
             $update_id = $pamaina->id ?? 0;
 
             $filezone_settings = $this->_init_filezone_settings();
@@ -24,18 +39,17 @@ class Galleries extends Trongate {
                 }
             }
             $pagination_data["total_rows"] = count($pics);
-            $pagination_data["page_num_segment"] = 4;
+            $pagination_data["page_num_segment"] = 5;
             $pagination_data["limit"] = $this->get_limit();
-            $pagination_data["pagination_root"] = "galleries/pamaina/$camp";
+            $pagination_data["pagination_root"] = "galleries/pamaina/$year/$camp";
             $pagination_data["record_name_plural"] = "pictures";
             $pagination_data["include_showing_statement"] = true;
             $data["pagination_data"] = $pagination_data;
-            $data["pictures"] = $this->reduce_rows($pics);
+            $data["pictures"] = $this->reduce_rows($pics, 5);
 
             $data['pamaina'] = $pamaina->pamaina ?? 'Gallery';
+            $data['year'] = $year;
             $data['update_id'] = $update_id;
-
-            // $data['pictures'] = $pics;
 
             $data['view_file'] = 'gallery_index';
             $this->template('public', $data);
@@ -200,7 +214,8 @@ class Galleries extends Trongate {
 
         if ($submit === 'Submit') {
 
-            $this->validation->set_rules('pamaina', 'pamaina', 'required|min_length[2]|max_length[255]');
+            $this->validation->set_rules('year', 'year', 'required|integer');
+            $this->validation->set_rules('pamaina', 'pamaina', 'required|integer');
 
             $result = $this->validation->run();
 
@@ -297,9 +312,9 @@ class Galleries extends Trongate {
      *
      * @return array Reduced rows.
      */
-    private function reduce_rows(array $all_rows): array {
+    private function reduce_rows(array $all_rows, int $offset_seg = 4): array {
         $rows = [];
-        $start_index = $this->get_offset();
+        $start_index = $this->get_offset($offset_seg);
         $limit = $this->get_limit();
         $end_index = $start_index + $limit;
 
@@ -335,8 +350,8 @@ class Galleries extends Trongate {
      * // pakeiciau is segment(3) i segment(4)
      * @return int Offset for pagination.
      */
-    private function get_offset(): int {
-        $page_num = (int) segment(4); // pakeiciau is segment(3) i segment(4)
+    private function get_offset(int $seg = 4): int {
+        $page_num = (int) segment($seg);
 
         if ($page_num>1) {
             $offset = ($page_num-1)*$this->get_limit();
@@ -372,7 +387,8 @@ class Galleries extends Trongate {
      * @return array Data from the POST request.
      */
     private function get_data_from_post(): array {
-        $data['pamaina'] = post('pamaina', true);        
+        $data['year'] = (int) post('year', true);
+        $data['pamaina'] = (int) post('pamaina', true);
         return $data;
     }
 

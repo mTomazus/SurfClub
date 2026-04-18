@@ -1,12 +1,12 @@
 <div class="container-xxl d-grid">
     <h1>Stovyklos galerija</h1>
-    <h2>Pamaina <?= out($pamaina) ?></h2>
+    <h2><?= out($year) ?> — Pamaina <?= out($pamaina) ?></h2>
 
     <div class="gallery">
     <?php foreach ($pictures as $picture): ?>
         <a class="gallery-item" href="galleries_module/galleries_pictures/<?= out($update_id) ?>/<?= out($picture) ?>" download>
-            <img src="galleries_module/galleries_pictures/<?= out($update_id) ?>/<?= out($picture) ?>" alt="Camp Photo">
-    </a>
+            <img src="galleries_module/galleries_pictures/<?= out($update_id) ?>/thumbnails/<?= out($picture) ?>" alt="Camp Photo">
+        </a>
     <?php endforeach; ?>
     </div>
     <?php Pagination::display($pagination_data); ?>
