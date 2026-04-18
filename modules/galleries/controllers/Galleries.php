@@ -29,6 +29,7 @@ class Galleries extends Trongate {
             $update_id = $pamaina->id ?? 0;
 
             $filezone_settings = $this->_init_filezone_settings();
+
             $pic_dir = APPPATH . 'modules/galleries/assets/' . $filezone_settings['destination'] . '/' . $update_id;
 
             $pictures = scandir($pic_dir);
@@ -37,6 +38,10 @@ class Galleries extends Trongate {
                 if (($value !== '.') && ($value !== '..') && ($value !== '.DS_Store') && ($value !== 'thumbnails')) {
                     $pics[] = $value;
                 }
+            }
+            // If no pictures are found, redirect to the gallery index page
+            if (!isset($pics)) {
+                $this->index();
             }
             $pagination_data["total_rows"] = count($pics);
             $pagination_data["page_num_segment"] = 5;
