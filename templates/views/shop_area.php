@@ -16,6 +16,8 @@
 
 		<footer><?= Template::partial('partials/shop_footer') ?></footer>
 
+		<?= Template::partial('partials/chat_widget') ?>
+
 		<script src="<?= BASE_URL ?>js/trongate-mx.js"></script>
 		<script src="<?= BASE_URL ?>js/app.js"></script>
 		<script src="<?= BASE_URL ?>js/trongate-datetime.js"></script>
