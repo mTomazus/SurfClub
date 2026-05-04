@@ -19,7 +19,7 @@
     <div class="logo">
         <a href="welcome/admin">Admino Zona</a>
     </div>
-    <div id="top-title" style="margin:auto"><?= $title ?></div>
+    <div id="top-title" style="margin:auto"><?= $title ?? '' ?></div>
     <div class="user text-right">
         <?= anchor('trongate_administrators/manage', '<i class="fa fa-user"></i>') ?>
         <?= anchor('trongate_administrators/logout', '<i class="fa fa-sign-out"></i>') ?>

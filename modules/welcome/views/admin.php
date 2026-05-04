@@ -4,7 +4,7 @@
 
     <h2>Overview</h2>
 
-    <div id="stat-cards" class="table-responsive">
+    <div id="stat-cards" style="margin-block: 1rem;">
         <a class="stat-card" mx-get="camps" mx-target="#form-container" mx-select="#nav-table" mx-select-oob="#title:#top-title">
             <span class="stat-label">Camps</span>
             <span class="stat-count"><?= $stats['camps'] ?></span>
