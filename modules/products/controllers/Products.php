@@ -430,6 +430,81 @@ class Products extends Trongate {
                 [$item->quantity, $item->product_id]
             );
         }
+
+        $this->_send_order_email($order_id);
+    }
+
+    private function _send_order_email(int $order_id): void {
+        $order = $this->model->get_one_where('id', $order_id, 'products_orders');
+        if (!$order || empty($order->email)) {
+            return;
+        }
+
+        $items = $this->model->query_bind(
+            "SELECT p.name, i.quantity, i.price
+             FROM products_orders_items i
+             JOIN products p ON i.product_id = p.id
+             WHERE i.order_id = ?",
+            [$order_id],
+            'object'
+        );
+
+        $total = 0;
+        $items_html = '';
+        foreach ($items as $item) {
+            $line_total = $item->quantity * $item->price;
+            $total += $line_total;
+            $items_html .= '<tr>'
+                . '<td style="padding:8px;border-bottom:1px solid #eee;">' . htmlspecialchars($item->name) . '</td>'
+                . '<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">' . (int)$item->quantity . '</td>'
+                . '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">' . number_format((float)$item->price, 2) . ' &euro;</td>'
+                . '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">' . number_format($line_total, 2) . ' &euro;</td>'
+                . '</tr>';
+        }
+
+        $delivery_label = ($order->delivery === 'omniva')
+            ? 'Omniva paštomatas: ' . htmlspecialchars($order->address)
+            : 'Atsiėmimas';
+
+        $html = '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;">'
+            . '<h2 style="color:#1a1a1a;">Ačiū už užsakymą, ' . htmlspecialchars($order->customer_name) . '!</h2>'
+            . '<p>Jūsų užsakymas <strong>#' . $order_id . '</strong> patvirtintas ir apmokėtas.</p>'
+            . '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
+            . '<thead><tr style="background:#f5f5f5;">'
+            . '<th style="padding:8px;text-align:left;">Prekė</th>'
+            . '<th style="padding:8px;text-align:center;">Kiekis</th>'
+            . '<th style="padding:8px;text-align:right;">Kaina</th>'
+            . '<th style="padding:8px;text-align:right;">Suma</th>'
+            . '</tr></thead>'
+            . '<tbody>' . $items_html . '</tbody>'
+            . '</table>'
+            . '<p style="text-align:right;font-size:1.1em;"><strong>Viso: ' . number_format($total, 2) . ' &euro;</strong></p>'
+            . '<p><strong>Pristatymas:</strong> ' . $delivery_label . '</p>'
+            . '<p style="color:#555;">Klausimų? Rašykite: <a href="mailto:info@banglente.lt">info@banglente.lt</a></p>'
+            . '</body></html>';
+
+        $payload = [
+            'sender'      => ['name' => 'Banglente', 'email' => 'info@banglente.lt'],
+            'to'          => [['email' => $order->email, 'name' => $order->customer_name]],
+            'subject'     => 'Užsakymo patvirtinimas #' . $order_id,
+            'htmlContent' => $html,
+        ];
+
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'api-key: ' . constant('BREVO_API'),
+                'Content-Type: application/json',
+                'Accept: application/json',
+            ],
+        ]);
+        curl_exec($ch);
+        curl_close($ch);
     }
 
     function _get_everypay_link($order_id, $total_amount) {
