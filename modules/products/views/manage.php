@@ -2,6 +2,7 @@
 <?php
 flashdata();
 echo '<p>'.anchor('products/create', 'Create New Product Record', array("class" => "button"));
+echo ' '.anchor('products/orders', 'View Orders', array("class" => "button alt"));
 if(strtolower(ENV) === 'dev') {
     echo anchor('api/explorer/products', 'API Explorer', array("class" => "button alt"));
 }

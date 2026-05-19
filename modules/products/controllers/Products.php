@@ -604,6 +604,77 @@ class Products extends Trongate {
         $this->template('admin', $data);
     }
 
+    public function orders(): void {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
+        $allowed_statuses = ['pending', 'paid', 'failed'];
+
+        if ($status_filter && in_array($status_filter, $allowed_statuses)) {
+            $all_rows = $this->model->query_bind(
+                "SELECT * FROM products_orders WHERE status = ? ORDER BY id DESC",
+                [$status_filter],
+                'object'
+            );
+            $data['headline'] = 'Orders: ' . ucfirst($status_filter);
+        } else {
+            $status_filter = '';
+            $all_rows = $this->model->query(
+                "SELECT * FROM products_orders ORDER BY id DESC",
+                'object'
+            );
+            $data['headline'] = 'Manage Orders';
+        }
+
+        $pagination_data['total_rows'] = count($all_rows);
+        $pagination_data['page_num_segment'] = 3;
+        $pagination_data['limit'] = $this->get_limit();
+        $pagination_data['pagination_root'] = 'products/orders';
+        $pagination_data['record_name_plural'] = 'orders';
+        $pagination_data['include_showing_statement'] = true;
+        $data['pagination_data'] = $pagination_data;
+
+        $data['rows'] = $this->reduce_rows($all_rows);
+        $data['selected_per_page'] = $this->get_selected_per_page();
+        $data['per_page_options'] = $this->per_page_options;
+        $data['status_filter'] = $status_filter;
+        $data['view_module'] = 'products';
+        $data['view_file'] = 'orders';
+        $this->template('admin', $data);
+    }
+
+    public function show_order(): void {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $order_id = (int) segment(3);
+        if ($order_id === 0) {
+            redirect('products/orders');
+        }
+
+        $order = $this->model->get_one_where('id', $order_id, 'products_orders');
+        if (!$order) {
+            redirect('products/orders');
+        }
+
+        $items = $this->model->query_bind(
+            "SELECT p.name, p.image, i.quantity, i.price
+             FROM products_orders_items i
+             JOIN products p ON i.product_id = p.id
+             WHERE i.order_id = ?",
+            [$order_id],
+            'object'
+        );
+
+        $data['order'] = $order;
+        $data['items'] = $items;
+        $data['headline'] = 'Order #' . $order_id;
+        $data['view_module'] = 'products';
+        $data['view_file'] = 'show_order';
+        $this->template('admin', $data);
+    }
+
     // Display a webpage showing information for an individual record.
 
     public function show(): void {
