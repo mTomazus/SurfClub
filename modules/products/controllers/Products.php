@@ -347,42 +347,14 @@ class Products extends Trongate {
             return;
         }
 
-        $api_username = constant('EVERYPAY_API_USERNAME');
-        $auth_key = constant('EVERYPAY_AUTH_KEY');
-        $api_url = constant('EVERYPAY_URL');
-
-        $url = "{$api_url}{$payment_ref}?api_username={$api_username}&detailed=true";
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Basic ' . base64_encode($api_username . ':' . $auth_key),
-                'Content-Type: application/json'
-            ]
-        ]);
-
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($err) {
-            echo "<h2>cURL Error:</h2><p>$err</p>";
+        $result = $this->_verify_everypay_payment($payment_ref);
+        if (!$result) {
+            echo "<h2>Error</h2><p>Could not verify payment with EveryPay.</p>";
             return;
         }
 
-        $result = json_decode($response, true);
-
-        if (
-            !$result ||
-            !isset($result['payment_state'], $result['payment_reference'], $result['order_reference'])
-        ) {
-            echo "<h2>Error</h2><p>Invalid response from EveryPay.</p>";
-            return;
-        }
-
+        $payment_state   = $result['payment_state'];
         $order_reference = $result['order_reference'];
-        $payment_state = $result['payment_state'];
 
         if ($payment_state === 'settled') {
             $order_id = (int) str_replace('ORDER-', '', $order_reference);
@@ -393,7 +365,51 @@ class Products extends Trongate {
         }
     }
 
+    private function _verify_everypay_payment(string $payment_ref): ?array {
+        $api_username = constant('EVERYPAY_API_USERNAME');
+        $auth_key     = constant('EVERYPAY_AUTH_KEY');
+        $api_url      = constant('EVERYPAY_URL');
+
+        $url = "{$api_url}{$payment_ref}?api_username={$api_username}&detailed=true";
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Basic ' . base64_encode($api_username . ':' . $auth_key),
+                'Content-Type: application/json'
+            ]
+        ]);
+
+        $response = curl_exec($ch);
+        $err      = curl_error($ch);
+        curl_close($ch);
+
+        if ($err || !$response) {
+            return null;
+        }
+
+        $result = json_decode($response, true);
+        if (!$result || !isset($result['payment_state'], $result['order_reference'])) {
+            return null;
+        }
+
+        return $result;
+    }
+
     private function _confirm_order(int $order_id, string $payment_ref): void {
+        // Idempotency: skip if this order was already confirmed (e.g. duplicate webhook)
+        $rows = $this->model->query_bind(
+            "SELECT status FROM products_orders WHERE id = ? LIMIT 1",
+            [$order_id],
+            'object'
+        );
+        if (!$rows || $rows[0]->status === 'paid') {
+            return;
+        }
+
         $this->model->update($order_id, [
             'status'            => 'paid',
             'payment_reference' => $payment_ref,
@@ -460,32 +476,32 @@ class Products extends Trongate {
     }
 
     function webhook() {
-        // Accept only POST requests
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             die('Method Not Allowed');
         }
-    
-        // Read and decode raw JSON input
+
         $raw_input = file_get_contents('php://input');
-        $payload = json_decode($raw_input, true);
-    
-        // Log payload if needed
-        // file_put_contents('everypay_log.txt', $raw_input.PHP_EOL, FILE_APPEND);
-    
-        // Basic check
-        if (!isset($payload['payment_reference'], $payload['order_reference'], $payload['payment_state'])) {
+        $payload   = json_decode($raw_input, true);
+
+        if (!isset($payload['payment_reference'], $payload['order_reference'])) {
             http_response_code(400);
             die('Invalid webhook payload');
         }
-    
+
         $payment_ref = $payload['payment_reference'];
-        $order_ref = $payload['order_reference']; // e.g. ORDER-123
-        $payment_state = $payload['payment_state'];
-    
-        // Parse the order ID
-        $order_id = (int) str_replace('ORDER-', '', $order_ref);
-    
+        $order_ref   = $payload['order_reference'];
+        $order_id    = (int) str_replace('ORDER-', '', $order_ref);
+
+        // Verify payment status directly with EveryPay API — do not trust raw payload
+        $result = $this->_verify_everypay_payment($payment_ref);
+        if (!$result) {
+            http_response_code(502);
+            die('Could not verify payment with EveryPay');
+        }
+
+        $payment_state = $result['payment_state'];
+
         if ($payment_state === 'settled') {
             $this->_confirm_order($order_id, $payment_ref);
         } else {
@@ -494,8 +510,7 @@ class Products extends Trongate {
                 'payment_reference' => $payment_ref,
             ], 'products_orders');
         }
-    
-        // Send 200 OK response to confirm receipt
+
         http_response_code(200);
         echo 'Webhook received';
     }
