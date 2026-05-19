@@ -36,23 +36,22 @@
     </div>
     <div id="nav">
         <ul id="top-nav">
-            <li><a href="products/naujos">NEW</a></li>
-            <li><a href="products/">BEST</a></li>
-            <li><a href="products/surf">SURF</a></li>
-            <li><a href="products/beach">BEACH</a></li>
+            <li><a href="products/category/new">NEW</a></li>
+            <li><a href="products/category/best">BEST</a></li>
+            <li><a href="products/category/surf">SURF</a></li>
+            <li><a href="products/category/beach">BEACH</a></li>
         </ul>
     </div>
     <div class="mr-1">
         <a href="products/login" aria-label="log in"><i class="fa fa-user"></i></a>
         <a href="products/wishlist" aria-label="wish list"><i class="fa fa-heart"></i></a>
-        <a href="products/cart" aria-label="shopping cart">
+        <button onclick="openCartDrawer()" class="cart-icon-btn" aria-label="shopping cart">
             <i class="fa fa-shopping-basket">
                 <?php if (!empty($_SESSION['cart'])): ?>
                     <span class="cart-count"><?= array_sum($_SESSION['cart']) ?></span>
                 <?php endif; ?>
             </i>
-            
-        </a>
+        </button>
     </div>
     <div id="megaburger" class="burger col-3" onclick="toggleMegaNav()">
         <div class="line1"></div>

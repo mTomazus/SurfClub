@@ -12,22 +12,24 @@ class Products extends Trongate {
         $this->_listing('best', 'Perkamiausios prekės');
     }
 
-    public function naujos(): void {
-        $this->_listing('new', 'Naujausios prekės');
-    }
-
-    public function surf(): void {
-        $this->_listing('surf', 'Surf prekės');
-    }
-
-    public function beach(): void {
-        $this->_listing('beach', 'Pliažo prekės');
+    public function category(): void {
+        $slug = segment(3);
+        if (!$slug) {
+            $this->template('error_404');
+            return;
+        }
+        $category = $this->model->get_one_where('slug', $slug, 'products_categories');
+        if (!$category) {
+            $this->template('error_404');
+            return;
+        }
+        $this->_listing($slug, $category->name);
     }
 
     private function _listing(string $slug, string $page_title): void {
         $category = $this->model->get_one_where('slug', $slug, 'products_categories');
         if (!$category) {
-            echo "Category not found.";
+            $this->template('error_404');
             return;
         }
         $sql = "SELECT p.*
