@@ -1,0 +1,57 @@
+SHOP-001 [DONE] — Stock not decremented after confirmed payment
+  - Extracted private _confirm_order(int $order_id, string $payment_ref) in Products.php
+  - Both payment_result() and webhook() now call _confirm_order() on 'settled' state
+  - _confirm_order() updates order status to 'paid' and runs
+    GREATEST(0, in_stock - qty) for each products_orders_items row
+  - Commit: d93036e
+
+SHOP-002 [DONE] — Cart quantity not capped to available stock
+  - add_to_cart() fetches products.in_stock; rejects (flash notice) if stock=0,
+    caps new_qty = min(current + requested, stock)
+  - update_cart() fetches stock before 'increase'; skips increment if at cap
+  - Added flashdata() call + .shop-flash style to shop template
+  - Commit: b62fd96
+SHOP-003 [DONE] — Webhook does not reliably confirm payment when shopper closes browser
+  - Extracted private _verify_everypay_payment(string $payment_ref): ?array
+    used by both payment_result() and webhook()
+  - webhook() now calls EveryPay API to confirm payment state instead of trusting
+    the raw POST payload (prevents fake webhook attacks)
+  - _confirm_order() guards idempotency: returns early if order is already 'paid',
+    preventing double stock decrement on retried webhooks
+  - Added CURLOPT_TIMEOUT (10s) / CURLOPT_CONNECTTIMEOUT (5s) to verification curl
+  - Commit: 43fdba1
+SHOP-004 [DONE] — Discount price ignored in cart and checkout totals
+  - Added effective_price = (discount_price > 0) ? discount_price : price
+    helper pattern in cart.php, cart_panel.php, checkout.php, and
+    process_order() in Products.php
+  - Cart and cart panel show strikethrough original + discounted price
+  - Checkout line totals and grand total use effective_price
+  - products_orders_items.price now stores the actual charged amount
+  - Commit: b3e1e0c
+SHOP-005 [DONE] — Broken category routes — deleted view files
+  - Added public category() method: reads slug from segment(3), 404s via
+    error_404 template if slug not found in products_categories, then calls _listing()
+  - Removed naujos(), surf(), beach() methods (view files were deleted)
+  - Kept index() for /products default landing (used by add_to_cart redirect)
+  - Fixed _listing() fallback from bare echo to proper error_404 template
+  - Updated nav links in shop_header.php to /products/category/{slug}
+  - Commit: f65d1bc
+SHOP-006 [DONE] — Admin endpoints missing security checks
+  - All admin methods (create, manage, show, submit, submit_delete, set_per_page,
+    submit_upload_picture, ditch_picture) already had security checks in place.
+    No code change required; marking done after verification.
+SHOP-007 [DONE] — No admin order list or order detail view
+  - Added orders() method: paginated products_orders list ordered newest-first,
+    filterable by status (pending/paid/failed) via ?status= query param
+  - Added show_order() method: renders customer info + order items table with total
+  - Created orders.php and show_order.php admin views
+  - Added "View Orders" button to manage.php
+  - Commit: 2074492
+SHOP-008 [OPEN] — No order confirmation email sent to customer
+SHOP-009 [OPEN] — Omniva parcel locker cache has no TTL
+SHOP-010 [OPEN] — Variant stock vs product stock ambiguous source of truth
+SHOP-011 [OPEN] — Price change between cart add and checkout not communicated
+SHOP-012 [OPEN] — EveryPay credentials stored in version-controlled config file
+SHOP-013 [OPEN] — No error handling if EveryPay API is unreachable
+SHOP-014 [OPEN] — Controller too large
+SHOP-015 [OPEN] — Wishlist lost on cookie clear
