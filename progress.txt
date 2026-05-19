@@ -47,7 +47,15 @@ SHOP-007 [DONE] — No admin order list or order detail view
   - Created orders.php and show_order.php admin views
   - Added "View Orders" button to manage.php
   - Commit: 2074492
-SHOP-008 [OPEN] — No order confirmation email sent to customer
+SHOP-008 [DONE] — No order confirmation email sent to customer
+  - Added private _send_order_email(int $order_id) called at end of _confirm_order()
+  - Fetches order (email, customer_name, delivery, address) + items joined with products
+  - Builds HTML email: greeting, order ID, item table (name/qty/unit price/line total),
+    grand total, delivery method
+  - POSTs to Brevo transactional API (POST /v3/smtp/email) with BREVO_API key
+  - Sender: info@banglente.lt; subject: "Užsakymo patvirtinimas #<id>"
+  - Covered by _confirm_order() idempotency guard — duplicate webhooks skip email
+  - Commit: 88388d8
 SHOP-009 [OPEN] — Omniva parcel locker cache has no TTL
 SHOP-010 [OPEN] — Variant stock vs product stock ambiguous source of truth
 SHOP-011 [OPEN] — Price change between cart add and checkout not communicated
