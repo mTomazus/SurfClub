@@ -140,17 +140,23 @@ class Products extends Trongate {
     function add_to_cart() {
 
         $productId = (int) post('product_id');
-        $quantity = (int) ($_POST['quantity'] ?? 1);
+        $quantity  = max(1, (int) ($_POST['quantity'] ?? 1));
+
+        $product = $this->model->get_where($productId, 'products');
+        $stock   = $product ? (int) $product->in_stock : 0;
+
+        if ($stock === 0) {
+            set_flashdata('Atsiprašome, šios prekės nėra sandėlyje.');
+            redirect('products/item/' . $productId);
+        }
 
         if (!isset($_SESSION['cart'])) {
             $_SESSION['cart'] = [];
         }
 
-        if (isset($_SESSION['cart'][$productId])) {
-            $_SESSION['cart'][$productId] += $quantity;
-        } else {
-            $_SESSION['cart'][$productId] = $quantity;
-        }
+        $current  = $_SESSION['cart'][$productId] ?? 0;
+        $new_qty  = min($current + $quantity, $stock);
+        $_SESSION['cart'][$productId] = $new_qty;
 
         redirect('products');
 
@@ -159,18 +165,23 @@ class Products extends Trongate {
     function update_cart() {
 
         $product_id = post('product_id');
-        $action = post('action');
+        $action     = post('action');
 
-        if (isset($_SESSION['cart'][$product_id])) {
-            if ($action === 'increase') {
-                $_SESSION['cart'][$product_id]++;
-            } elseif ($action === 'decrease' && $_SESSION['cart'][$product_id] > 1) {
-                $_SESSION['cart'][$product_id]--;
-            } else {
-                unset($_SESSION['cart'][$product_id]);
+        if ($action === 'increase') {
+            $product = $this->model->get_where((int) $product_id, 'products');
+            $stock   = $product ? (int) $product->in_stock : 0;
+            $current = $_SESSION['cart'][$product_id] ?? 0;
+            if ($current < $stock) {
+                $_SESSION['cart'][$product_id] = $current + 1;
             }
-        } elseif ($action === 'increase') {
-            $_SESSION['cart'][$product_id] = 1;
+        } elseif ($action === 'decrease') {
+            if (isset($_SESSION['cart'][$product_id])) {
+                if ($_SESSION['cart'][$product_id] > 1) {
+                    $_SESSION['cart'][$product_id]--;
+                } else {
+                    unset($_SESSION['cart'][$product_id]);
+                }
+            }
         }
 
         echo '';
