@@ -11,15 +11,22 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($products as $product): 
+                <?php $total = 0; foreach ($products as $product):
                     $pid = $product->id;
                     $quantity = $cart[$pid];
-                    $subtotal = $quantity * $product->price;
+                    $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
+                    $subtotal = $quantity * $effective_price;
                     $total += $subtotal;
                 ?>
                 <tr>
                     <td><img src="<?= $product->picture_path ?>" alt="<?= $product->name ?>" class="product-small-image"><p><?= out($product->name) ?></p></td>
-                    <td><?= number_format($product->price, 2) ?></td>
+                    <td>
+                        <?php if ($product->discount_price > 0): ?>
+                            <s><?= number_format($product->price, 2) ?></s> <?= number_format($product->discount_price, 2) ?>
+                        <?php else: ?>
+                            <?= number_format($product->price, 2) ?>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <div class="quantity-controls">
                             <a mx-post="products/update_cart" mx-vals='{"product_id": "<?= $product->id ?>", "action": "decrease"}' mx-target=".cart-container" mx-on-success=".cart-container"><i class="fa fa-minus" aria-hidden="true"></i></a>

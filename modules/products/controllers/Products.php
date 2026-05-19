@@ -289,12 +289,13 @@ class Products extends Trongate {
             $total_amount = 0;
             foreach ($products as $product) {
                 $qty = $cart[$product->id];
-                $total_amount += $product->price * $qty;
+                $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
+                $total_amount += $effective_price * $qty;
                 $order_data = [
                     'order_id' => $order_id,
                     'product_id' => $product->id,
                     'quantity' => $qty,
-                    'price' => $product->price
+                    'price' => $effective_price
                 ];
                 $this->model->insert($order_data, 'products_orders_items');
             }
