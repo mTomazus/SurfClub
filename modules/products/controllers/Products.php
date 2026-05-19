@@ -9,104 +9,38 @@ class Products extends Trongate {
     //-----------------------------------------------------------
 
     public function index(): void {
-        // Get the category ID for "Best sellers"
-        $category = $this->model->get_one_where('slug', 'best', 'products_categories');
-    
-        if (!$category) {
-            echo "Category not found.";
-            return;
-        }
-    
-        // Fetch only products from the Beachwear category
-        $sql = "
-            SELECT p.*
-            FROM products p
-            JOIN products_items_categories pic ON p.id = pic.product_id
-            WHERE pic.category_id = ?
-            AND p.status = 'active'
-            ORDER BY p.id DESC
-        ";
-        $products = $this->model->query_bind($sql, [$category->id], 'object');
-    
-        $data['products'] = $this->_add_picture_paths($products);
-        $data['view_module'] = 'products';
-        $data['view_file'] = 'products';
-        $this->template('shop_area', $data);
+        $this->_listing('best', 'Perkamiausios prekės');
     }
 
     public function naujos(): void {
-        // Get the category ID for "New products"
-        $category = $this->model->get_one_where('slug', 'new', 'products_categories');
-
-        if (!$category) {
-            echo "Category not found.";
-            return;
-        }
-
-        // Fetch only products from the selected category category
-        $sql = "
-            SELECT p.*
-            FROM products p
-            JOIN products_items_categories pic ON p.id = pic.product_id
-            WHERE pic.category_id = ?
-            AND p.status = 'active'
-            ORDER BY p.id DESC";
-        $products = $this->model->query_bind($sql, [$category->id], 'object');
-        
-
-        $data['products'] = $this->_add_picture_paths($products);
-        $data['view_module'] = 'products';
-        $data['view_file'] = 'naujos';
-        $this->template('shop_area', $data);
+        $this->_listing('new', 'Naujausios prekės');
     }
 
     public function surf(): void {
-        // Get the category ID for "Surf products"
-        $category = $this->model->get_one_where('slug', 'surf', 'products_categories');
-    
-        if (!$category) {
-            echo "Category not found.";
-            return;
-        }
-
-        // Fetch only products from the selected category category
-        $sql = "
-            SELECT p.*
-            FROM products p
-            JOIN products_items_categories pic ON p.id = pic.product_id
-            WHERE pic.category_id = ?
-            AND p.status = 'active'
-            ORDER BY p.id DESC";
-        $products = $this->model->query_bind($sql, [$category->id], 'object');
-
-        $data['products'] = $this->_add_picture_paths($products);
-        $data['view_module'] = 'products';
-        $data['view_file'] = 'surf';
-        $this->template('shop_area', $data);
+        $this->_listing('surf', 'Surf prekės');
     }
 
     public function beach(): void {
-        // Get the category ID for "beach products"
-        $category = $this->model->get_one_where('slug', 'beach', 'products_categories');
-    
+        $this->_listing('beach', 'Pliažo prekės');
+    }
+
+    private function _listing(string $slug, string $page_title): void {
+        $category = $this->model->get_one_where('slug', $slug, 'products_categories');
         if (!$category) {
             echo "Category not found.";
             return;
         }
-
-        // Fetch only products from the selected category category
-        $sql = "
-            SELECT p.*
-            FROM products p
-            JOIN products_items_categories pic ON p.id = pic.product_id
-            WHERE pic.category_id = ?
-            AND p.status = 'active'
-            ORDER BY p.id DESC";
+        $sql = "SELECT p.*
+                FROM products p
+                JOIN products_items_categories pic ON p.id = pic.product_id
+                WHERE pic.category_id = ?
+                AND p.status = 'active'
+                ORDER BY p.id DESC";
         $products = $this->model->query_bind($sql, [$category->id], 'object');
-
         $data['products'] = $this->_add_picture_paths($products);
+        $data['page_title'] = $page_title;
         $data['view_module'] = 'products';
-        $data['view_file'] = 'beach';
+        $data['view_file'] = 'listing';
         $this->template('shop_area', $data);
     }
 
@@ -114,9 +48,9 @@ class Products extends Trongate {
         $product_id = (int)segment(3);
 
         $sql = "SELECT p.id, p.name, p.description, p.short_desc, p.price, p.image,
-                v.option_name, v.option_value, v.stock 
+                v.option_name, v.option_value, v.stock
                 FROM products p
-                JOIN products_variants v ON p.id = v.product_id
+                LEFT JOIN products_variants v ON p.id = v.product_id
                 WHERE p.id = ?
                 AND p.status = 'active'
                 ORDER BY p.id DESC";
@@ -156,18 +90,25 @@ class Products extends Trongate {
 
     function _get_omniva_lockers() {
 
-        // Fetch JSON data from Omniva
-        $jsonUrl = "https://www.omniva.ee/locations.json";
-        $jsonData = file_get_contents($jsonUrl);
+        $cache_file = APPPATH . 'modules/products/assets/omniva_cache.json';
 
-        if ($jsonData === false) {
-            die("Failed to load location data.");
+        if (file_exists($cache_file) && (time() - filemtime($cache_file)) < 86400) {
+            $jsonData = file_get_contents($cache_file);
+        } else {
+            $jsonData = file_get_contents("https://www.omniva.ee/locations.json");
+            if ($jsonData === false) {
+                // Fall back to stale cache if available
+                if (file_exists($cache_file)) {
+                    $jsonData = file_get_contents($cache_file);
+                } else {
+                    die("Failed to load location data.");
+                }
+            } else {
+                file_put_contents($cache_file, $jsonData);
+            }
         }
 
-        // Decode JSON into associative array
-        $locations = json_decode($jsonData, true);
-
-        return $locations; 
+        return json_decode($jsonData, true);
     }
 
     function checkout(): void {
@@ -198,8 +139,8 @@ class Products extends Trongate {
 
     function add_to_cart() {
 
-        $productId = $_POST['product_id'];
-        $quantity = $_POST['quantity'] ?? 1;
+        $productId = (int) post('product_id');
+        $quantity = (int) ($_POST['quantity'] ?? 1);
 
         if (!isset($_SESSION['cart'])) {
             $_SESSION['cart'] = [];
@@ -232,6 +173,7 @@ class Products extends Trongate {
             $_SESSION['cart'][$product_id] = 1;
         }
 
+        echo '';
     }
 
     function remove_from_cart() {
@@ -245,6 +187,26 @@ class Products extends Trongate {
 
     }
 
+    public function cart_panel(): void {
+        $cart = $_SESSION['cart'] ?? [];
+        $products = [];
+        if (!empty($cart)) {
+            $product_ids = array_keys($cart);
+            $products = $this->model->get_where_in('id', $product_ids, 'products');
+            $products = $this->_add_picture_paths($products);
+        }
+        extract(['cart' => $cart, 'products' => $products]);
+        include APPPATH . 'modules/products/views/cart_panel.php';
+    }
+
+    public function remove_from_cart_ajax(): void {
+        $id = segment(3, 'int') ?? null;
+        if ($id && isset($_SESSION['cart'][$id])) {
+            unset($_SESSION['cart'][$id]);
+        }
+        echo '';
+    }
+
     public function cart() {
         
         $cart = $_SESSION['cart'] ?? [];
@@ -252,6 +214,7 @@ class Products extends Trongate {
         if (empty($cart)) {
             $data['view_file'] = 'cart';
             $this->template('shop_area', $data);
+            return;
         }
 
         $product_ids = array_keys($cart);
@@ -310,8 +273,8 @@ class Products extends Trongate {
             // Get product prices
             $product_ids = array_keys($cart);
 
-            $products = $this->model->get_where_in('id', $product_ids);
-            
+            $products = $this->model->get_where_in('id', $product_ids, 'products');
+
             $total_amount = 0;
             foreach ($products as $product) {
                 $qty = $cart[$product->id];
@@ -372,12 +335,11 @@ class Products extends Trongate {
             echo "<h2>Error</h2><p>Missing payment reference.</p>";
             return;
         }
-    
+
         $api_username = constant('EVERYPAY_API_USERNAME');
         $auth_key = constant('EVERYPAY_AUTH_KEY');
         $api_url = constant('EVERYPAY_URL');
-    
-        // ✅ FIX: Add api_username and detailed to the URL
+
         $url = "{$api_url}{$payment_ref}?api_username={$api_username}&detailed=true";
 
         $ch = curl_init($url);
@@ -388,7 +350,7 @@ class Products extends Trongate {
                 'Content-Type: application/json'
             ]
         ]);
-    
+
         $response = curl_exec($ch);
         $err = curl_error($ch);
         curl_close($ch);
@@ -397,9 +359,9 @@ class Products extends Trongate {
             echo "<h2>cURL Error:</h2><p>$err</p>";
             return;
         }
-    
+
         $result = json_decode($response, true);
-    
+
         if (
             !$result ||
             !isset($result['payment_state'], $result['payment_reference'], $result['order_reference'])
@@ -407,27 +369,36 @@ class Products extends Trongate {
             echo "<h2>Error</h2><p>Invalid response from EveryPay.</p>";
             return;
         }
-    
+
         $order_reference = $result['order_reference'];
         $payment_state = $result['payment_state'];
-    
+
         if ($payment_state === 'settled') {
-
-            // Data to update
-            $data['status'] = 'paid';
-            $data['payment_reference'] = $payment_ref;
-
-            $order_id = (int) str_replace('ORDER-', '', $order_reference); // gives id
-
-            // Update the customer record in the 'customers' table
-            $this->model->update($order_id, $data, 'products_orders');
-    
+            $order_id = (int) str_replace('ORDER-', '', $order_reference);
+            $this->_confirm_order($order_id, $payment_ref);
             redirect('products/thank_you');
-
         } else {
-
             echo "<h2>Payment Failed</h2><p>Status: $payment_state</p>";
+        }
+    }
 
+    private function _confirm_order(int $order_id, string $payment_ref): void {
+        $this->model->update($order_id, [
+            'status'            => 'paid',
+            'payment_reference' => $payment_ref,
+        ], 'products_orders');
+
+        $items = $this->model->query_bind(
+            "SELECT product_id, quantity FROM products_orders_items WHERE order_id = ?",
+            [$order_id],
+            'object'
+        );
+
+        foreach ($items as $item) {
+            $this->model->query_bind(
+                "UPDATE products SET in_stock = GREATEST(0, in_stock - ?) WHERE id = ?",
+                [$item->quantity, $item->product_id]
+            );
         }
     }
 
@@ -504,20 +475,13 @@ class Products extends Trongate {
         // Parse the order ID
         $order_id = (int) str_replace('ORDER-', '', $order_ref);
     
-        // Only update if payment is 'settled'
         if ($payment_state === 'settled') {
-            $data = [
-                'status' => 'paid',
-                'payment_reference' => $payment_ref
-            ];
-            $this->model->update($order_id, $data, 'products_orders');
+            $this->_confirm_order($order_id, $payment_ref);
         } else {
-            // You could log failures or mark status as 'failed'
-            $data = [
-                'status' => $payment_state, // 'failed', 'cancelled', etc.
-                'payment_reference' => $payment_ref
-            ];
-            $this->model->update($order_id, $data, 'products_orders');
+            $this->model->update($order_id, [
+                'status'            => $payment_state,
+                'payment_reference' => $payment_ref,
+            ], 'products_orders');
         }
     
         // Send 200 OK response to confirm receipt
@@ -544,10 +508,27 @@ class Products extends Trongate {
             $data = $this->get_data_from_post();
         }
 
-        if ($update_id>0) {
+        $cats = $this->model->get('id', 'products_categories');
+        $category_options = [];
+        foreach ($cats as $cat) {
+            $category_options[$cat->id] = $cat->name;
+        }
+        $data['category_options'] = $category_options;
+
+        if ($update_id > 0) {
+            $rows = $this->model->query_bind(
+                "SELECT category_id FROM products_items_categories WHERE product_id = ?",
+                [$update_id], 'object'
+            );
+            $selected = [];
+            foreach ($rows as $row) {
+                $selected[] = $row->category_id;
+            }
+            $data['selected_categories'] = $selected;
             $data['headline'] = 'Update Product Record';
             $data['cancel_url'] = BASE_URL.'products/show/'.$update_id;
         } else {
+            $data['selected_categories'] = [];
             $data['headline'] = 'Create New Product Record';
             $data['cancel_url'] = BASE_URL.'products/manage';
         }
@@ -683,11 +664,21 @@ class Products extends Trongate {
     private function save_product_categories(int $product_id): void {
         $categories = post('categories');
         if (!empty($categories) && is_array($categories)) {
+            $existing = $this->model->query_bind(
+                "SELECT category_id FROM products_items_categories WHERE product_id = ?",
+                [$product_id], 'object'
+            );
+            $existing_ids = [];
+            foreach ($existing as $row) {
+                $existing_ids[(int) $row->category_id] = true;
+            }
             foreach ($categories as $category_id) {
-                $this->model->insert([
-                    'product_id' => $product_id,
-                    'category_id' => $category_id
-                ], 'products_items_categories');
+                if (!isset($existing_ids[(int) $category_id])) {
+                    $this->model->insert([
+                        'product_id'  => $product_id,
+                        'category_id' => $category_id
+                    ], 'products_items_categories');
+                }
             }
         }
     }
@@ -695,16 +686,27 @@ class Products extends Trongate {
     private function save_product_variants(int $product_id): void {
         $variants = post('variants');
         if (!empty($variants) && is_array($variants)) {
+            $existing = $this->model->query_bind(
+                "SELECT option_name, option_value FROM products_variants WHERE product_id = ?",
+                [$product_id], 'object'
+            );
+            $existing_keys = [];
+            foreach ($existing as $row) {
+                $existing_keys[$row->option_name . ':' . $row->option_value] = true;
+            }
             foreach ($variants as $variant) {
                 $variant = trim($variant);
                 if ($variant !== '' && strpos($variant, ':') !== false) {
                     list($option, $value) = explode(':', $variant, 2);
-                    $this->model->insert([
-                        'product_id'   => $product_id,
-                        'option_name'  => trim($option),
-                        'option_value' => trim($value),
-                        'is_active'    => 1
-                    ], 'products_variants');
+                    $key = trim($option) . ':' . trim($value);
+                    if (!isset($existing_keys[$key])) {
+                        $this->model->insert([
+                            'product_id'   => $product_id,
+                            'option_name'  => trim($option),
+                            'option_value' => trim($value),
+                            'is_active'    => 1
+                        ], 'products_variants');
+                    }
                 }
             }
         }
@@ -1105,7 +1107,9 @@ class Products extends Trongate {
             $data['products'] = $this->model->get_where_in('id', $ids, 'products');
         }
     
-        $this->view('wishlist', $data);
+        $data['view_module'] = 'products';
+        $data['view_file'] = 'wishlist';
+        $this->template('shop_area', $data);
     }
 
 }
