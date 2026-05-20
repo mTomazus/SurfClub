@@ -56,8 +56,25 @@ SHOP-008 [DONE] — No order confirmation email sent to customer
   - Sender: info@banglente.lt; subject: "Užsakymo patvirtinimas #<id>"
   - Covered by _confirm_order() idempotency guard — duplicate webhooks skip email
   - Commit: 88388d8
-SHOP-009 [OPEN] — Omniva parcel locker cache has no TTL
-SHOP-010 [OPEN] — Variant stock vs product stock ambiguous source of truth
+SHOP-009 [DONE] — Omniva parcel locker cache has no TTL
+  - TTL check (86400 s) and stale-cache fallback were already present
+  - Replaced die() with return [] when cache is absent and API fails
+  - checkout.php: disables Omniva radio + shows Lithuanian notice when
+    $locations is empty; normal flow unchanged when API is reachable
+  - Commit: 9c10801
+SHOP-010 [DONE] — Variant stock vs product stock ambiguous source of truth
+  - Rule enforced: products_variants.stock per variant when product has active
+    variants; products.in_stock otherwise
+  - ALTER TABLE products_orders_items ADD COLUMN variant_id INT NULL
+  - add_to_cart(): variant_id from POST → variant stock check; fallback to in_stock;
+    rejects with notice if product has variants but none was selected
+  - update_cart(): reads variant_id from session entry, uses correct stock source
+  - process_order(): stores variant_id in products_orders_items
+  - _confirm_order(): decrements products_variants.stock or products.in_stock
+    depending on whether variant_id is set in the order item row
+  - Cart session format: [$pid => {qty, variant_id}]; all views updated
+  - item_show.php: hidden variant_id input + JS wires radio data-vid on change
+  - Commit: d92eaa3
 SHOP-011 [OPEN] — Price change between cart add and checkout not communicated
 SHOP-012 [OPEN] — EveryPay credentials stored in version-controlled config file
 SHOP-013 [OPEN] — No error handling if EveryPay API is unreachable
