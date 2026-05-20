@@ -55,19 +55,27 @@
                 echo '<div class="delivery">';
                 echo form_radio('delivery', 'atsiėmimas', true, ['id' => 'option1-input']);
                 echo form_label('Parduotuvėje Vėtros g. 8', ['for' => 'option1-input']);
-                echo form_radio('delivery', 'omniva', false, ['id' => 'option2-input']);
+                $omniva_available = !empty($locations);
+                $omniva_attrs = ['id' => 'option2-input'];
+                if (!$omniva_available) $omniva_attrs['disabled'] = 'disabled';
+                echo form_radio('delivery', 'omniva', false, $omniva_attrs);
                 echo form_label('<img src="https://www.omniva.lt/wp-content/themes/omniva/assets/dist/assets/img/logo/logo-sign.svg">Omniva paštomate', ['for' => 'option2-input', 'style' => 'gap:0.5rem; display:flex;']);
-                echo '<div class="omniva">';
-                echo form_label('Pasirinkite jums patogų paštomatą');
-                $options = [];
-                foreach ($locations as $location) {
-                    if ($location['TYPE'] === '0' && $location['A0_NAME'] === 'LT') {
-                        $options[$location['ZIP']] = $location['NAME'];
+                if (!$omniva_available) {
+                    echo '<p class="omniva-notice">Omniva paštomatų sąrašas šiuo metu nepasiekiamas. Prašome rinktis kitą pristatymo būdą.</p>';
+                } else {
+                    echo '<div class="omniva">';
+                    echo form_label('Pasirinkite jums patogų paštomatą');
+                    $options = [];
+                    foreach ($locations as $location) {
+                        if ($location['TYPE'] === '0' && $location['A0_NAME'] === 'LT') {
+                            $options[$location['ZIP']] = $location['NAME'];
+                        }
                     }
+                    echo form_dropdown('address', $options, post('address', true), ['class' => 'dropdown']);
+                    echo validation_errors('address');
+                    echo '</div>';
                 }
-                echo form_dropdown('address', $options, post('address', true), ['class' => 'dropdown']);
-                echo validation_errors('address');
-                echo '</div></div>';
+                echo '</div>';
                 echo '<div class="d-flex">';
                 echo form_checkbox('sutikimas', 1, post('sutikimas', true));
                 echo form_label('Pažymėdamas langelį patvirtinu, kad ir sutinku su Sąlygomis bei Prekių ir pinigų grąžinimo tvarka.');
@@ -255,6 +263,13 @@
 }
 
 /* ── Omniva select ───────────────────────────── */
+.omniva-notice {
+    grid-column: 1 / -1;
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    color: #b45309;
+}
+
 .omniva {
     display: none;
     grid-column: 1 / -1;

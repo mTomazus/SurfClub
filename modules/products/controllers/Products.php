@@ -103,7 +103,7 @@ class Products extends Trongate {
                 if (file_exists($cache_file)) {
                     $jsonData = file_get_contents($cache_file);
                 } else {
-                    die("Failed to load location data.");
+                    return [];
                 }
             } else {
                 file_put_contents($cache_file, $jsonData);
