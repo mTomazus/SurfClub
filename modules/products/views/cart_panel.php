@@ -1,6 +1,9 @@
 <?php
 $total = 0;
-$item_count = !empty($cart) ? array_sum($cart) : 0;
+$item_count = 0;
+foreach ($cart as $entry) {
+    $item_count += is_array($entry) ? (int)($entry['qty'] ?? 0) : (int)$entry;
+}
 ?>
 <span id="drawer-cart-count" data-count="<?= $item_count ?>" hidden></span>
 
@@ -13,7 +16,8 @@ $item_count = !empty($cart) ? array_sum($cart) : 0;
 
 <div class="drawer-items">
     <?php foreach ($products as $product):
-        $qty = $cart[$product->id];
+        $entry = $cart[$product->id];
+        $qty = is_array($entry) ? (int)($entry['qty'] ?? 0) : (int)$entry;
         $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
         $subtotal = $qty * $effective_price;
         $total += $subtotal;

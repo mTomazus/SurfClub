@@ -13,7 +13,8 @@
             <tbody>
                 <?php $total = 0; foreach ($products as $product):
                     $pid = $product->id;
-                    $quantity = $cart[$pid];
+                    $entry = $cart[$pid];
+                    $quantity = is_array($entry) ? (int)($entry['qty'] ?? 0) : (int)$entry;
                     $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
                     $subtotal = $quantity * $effective_price;
                     $total += $subtotal;
@@ -30,7 +31,7 @@
                     <td>
                         <div class="quantity-controls">
                             <a mx-post="products/update_cart" mx-vals='{"product_id": "<?= $product->id ?>", "action": "decrease"}' mx-target=".cart-container" mx-on-success=".cart-container"><i class="fa fa-minus" aria-hidden="true"></i></a>
-                            <span class="qty-value"><?= $cart[$product->id] ?></span>
+                            <span class="qty-value"><?= $quantity ?></span>
                             <a mx-post="products/update_cart" mx-vals='{"product_id": "<?= $product->id ?>", "action": "increase"}' mx-target=".cart-container" mx-on-success=".cart-container"><i class="fa fa-plus" aria-hidden="true"></i></a>
                         </div>
                         <a href="products/remove_from_cart/<?= $pid ?>" class="remove">Trinti<i class="fa fa-times" aria-hidden="true"></i></a>

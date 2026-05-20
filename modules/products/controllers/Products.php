@@ -49,13 +49,13 @@ class Products extends Trongate {
     public function item() {   // show item
         $product_id = (int)segment(3);
 
-        $sql = "SELECT p.id, p.name, p.description, p.short_desc, p.price, p.image,
-                v.option_name, v.option_value, v.stock
+        $sql = "SELECT p.id, p.name, p.description, p.short_desc, p.price, p.discount_price, p.image,
+                v.id AS variant_id, v.option_name, v.option_value, v.stock
                 FROM products p
-                LEFT JOIN products_variants v ON p.id = v.product_id
+                LEFT JOIN products_variants v ON p.id = v.product_id AND v.is_active = 1
                 WHERE p.id = ?
                 AND p.status = 'active'
-                ORDER BY p.id DESC";
+                ORDER BY v.id ASC";
         $products = $this->model->query_bind($sql, [$product_id], 'object');
        
         if (!$products) {
@@ -141,11 +141,25 @@ class Products extends Trongate {
 
     function add_to_cart() {
 
-        $productId = (int) post('product_id');
-        $quantity  = max(1, (int) ($_POST['quantity'] ?? 1));
+        $productId  = (int) post('product_id');
+        $quantity   = max(1, (int) ($_POST['quantity'] ?? 1));
+        $variant_id = (int) post('variant_id');
 
-        $product = $this->model->get_where($productId, 'products');
-        $stock   = $product ? (int) $product->in_stock : 0;
+        if ($variant_id > 0) {
+            $variant = $this->model->get_one_where('id', $variant_id, 'products_variants');
+            $stock   = $variant ? (int) $variant->stock : 0;
+        } else {
+            $has = $this->model->query_bind(
+                "SELECT COUNT(*) AS cnt FROM products_variants WHERE product_id = ? AND is_active = 1",
+                [$productId], 'object'
+            );
+            if ($has && (int) $has[0]->cnt > 0) {
+                set_flashdata('Prašome pasirinkti variantą prieš pridedant į krepšelį.');
+                redirect('products/item/' . $productId);
+            }
+            $product = $this->model->get_where($productId, 'products');
+            $stock   = $product ? (int) $product->in_stock : 0;
+        }
 
         if ($stock === 0) {
             set_flashdata('Atsiprašome, šios prekės nėra sandėlyje.');
@@ -156,9 +170,14 @@ class Products extends Trongate {
             $_SESSION['cart'] = [];
         }
 
-        $current  = $_SESSION['cart'][$productId] ?? 0;
-        $new_qty  = min($current + $quantity, $stock);
-        $_SESSION['cart'][$productId] = $new_qty;
+        $entry   = $_SESSION['cart'][$productId] ?? ['qty' => 0, 'variant_id' => null];
+        $current = is_array($entry) ? (int) $entry['qty'] : (int) $entry;
+        $new_qty = min($current + $quantity, $stock);
+
+        $_SESSION['cart'][$productId] = [
+            'qty'        => $new_qty,
+            'variant_id' => $variant_id > 0 ? $variant_id : null,
+        ];
 
         redirect('products');
 
@@ -169,17 +188,25 @@ class Products extends Trongate {
         $product_id = post('product_id');
         $action     = post('action');
 
+        $entry      = $_SESSION['cart'][$product_id] ?? ['qty' => 0, 'variant_id' => null];
+        $current    = is_array($entry) ? (int) $entry['qty'] : (int) $entry;
+        $variant_id = is_array($entry) ? ($entry['variant_id'] ?? null) : null;
+
         if ($action === 'increase') {
-            $product = $this->model->get_where((int) $product_id, 'products');
-            $stock   = $product ? (int) $product->in_stock : 0;
-            $current = $_SESSION['cart'][$product_id] ?? 0;
+            if ($variant_id) {
+                $variant = $this->model->get_one_where('id', $variant_id, 'products_variants');
+                $stock   = $variant ? (int) $variant->stock : 0;
+            } else {
+                $product = $this->model->get_where((int) $product_id, 'products');
+                $stock   = $product ? (int) $product->in_stock : 0;
+            }
             if ($current < $stock) {
-                $_SESSION['cart'][$product_id] = $current + 1;
+                $_SESSION['cart'][$product_id] = ['qty' => $current + 1, 'variant_id' => $variant_id];
             }
         } elseif ($action === 'decrease') {
             if (isset($_SESSION['cart'][$product_id])) {
-                if ($_SESSION['cart'][$product_id] > 1) {
-                    $_SESSION['cart'][$product_id]--;
+                if ($current > 1) {
+                    $_SESSION['cart'][$product_id] = ['qty' => $current - 1, 'variant_id' => $variant_id];
                 } else {
                     unset($_SESSION['cart'][$product_id]);
                 }
@@ -290,14 +317,17 @@ class Products extends Trongate {
 
             $total_amount = 0;
             foreach ($products as $product) {
-                $qty = $cart[$product->id];
+                $entry   = $cart[$product->id];
+                $qty     = is_array($entry) ? (int) $entry['qty'] : (int) $entry;
+                $vid     = is_array($entry) ? ($entry['variant_id'] ?? null) : null;
                 $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
                 $total_amount += $effective_price * $qty;
                 $order_data = [
-                    'order_id' => $order_id,
+                    'order_id'   => $order_id,
                     'product_id' => $product->id,
-                    'quantity' => $qty,
-                    'price' => $effective_price
+                    'variant_id' => $vid,
+                    'quantity'   => $qty,
+                    'price'      => $effective_price,
                 ];
                 $this->model->insert($order_data, 'products_orders_items');
             }
@@ -419,16 +449,23 @@ class Products extends Trongate {
         ], 'products_orders');
 
         $items = $this->model->query_bind(
-            "SELECT product_id, quantity FROM products_orders_items WHERE order_id = ?",
+            "SELECT product_id, variant_id, quantity FROM products_orders_items WHERE order_id = ?",
             [$order_id],
             'object'
         );
 
         foreach ($items as $item) {
-            $this->model->query_bind(
-                "UPDATE products SET in_stock = GREATEST(0, in_stock - ?) WHERE id = ?",
-                [$item->quantity, $item->product_id]
-            );
+            if (!empty($item->variant_id)) {
+                $this->model->query_bind(
+                    "UPDATE products_variants SET stock = GREATEST(0, stock - ?) WHERE id = ?",
+                    [$item->quantity, $item->variant_id]
+                );
+            } else {
+                $this->model->query_bind(
+                    "UPDATE products SET in_stock = GREATEST(0, in_stock - ?) WHERE id = ?",
+                    [$item->quantity, $item->product_id]
+                );
+            }
         }
 
         $this->_send_order_email($order_id);
