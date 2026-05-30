@@ -1,18 +1,29 @@
-<!--
-  MOLAS SURF CLUB - AI CHAT WIDGET
-  
-  HOW TO ADD TO YOUR SITE:
-  ========================
-  Option A: Include this file as a Trongate partial in your template:
-    Add to templates/views/public.php (before </body>):
-      <?= Template::partial('partials/chat_widget') ?>
-    Then save this file as: templates/views/partials/chat_widget.php
-  
-  Option B: Copy everything below into the bottom of your template file.
-  
-  IMPORTANT: You need a small backend proxy to protect your API key.
-  See the PHP proxy file (chat_proxy.php) included with this widget.
--->
+<?php
+// Fetch live camp sessions for the AI system prompt
+$_chat_sessions_text = '';
+try {
+    $_chat_db = new PDO(
+        'mysql:host=' . HOST . ';dbname=' . DATABASE . ';charset=utf8mb4',
+        USER, PASSWORD,
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT]
+    );
+    $_chat_stmt = $_chat_db->query(
+        'SELECT pamaina, start, end, price, status FROM camps_pamainos ORDER BY pamaina'
+    );
+    $_chat_rows = $_chat_stmt ? $_chat_stmt->fetchAll(PDO::FETCH_OBJ) : [];
+    foreach ($_chat_rows as $_r) {
+        $label = match($_r->status) {
+            'full'  => 'PILNA',
+            'ended' => 'BAIGĖSI',
+            default => 'laisva',
+        };
+        $_chat_sessions_text .= "- {$_r->pamaina}. pamaina: {$_r->start} – {$_r->end}, {$_r->price}€ [{$label}]\n";
+    }
+    $_chat_db = null;
+} catch (Exception $_e) {
+    $_chat_sessions_text = '(pamainos šiuo metu nepasiekiamos)';
+}
+?>
 
 <div id="molas-chat-root"></div>
 
@@ -151,8 +162,55 @@
   /* Animations */
   @keyframes mc-bubbleIn { from { transform: scale(0) rotate(-180deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
   @keyframes mc-chatOpen { from { transform: scale(0.5) translateY(40px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  @keyframes mc-chatOpenMobile { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes mc-msgIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   @keyframes mc-dotPulse { 0%,60%,100% { transform: scale(1); opacity: 0.4; } 30% { transform: scale(1.3); opacity: 1; } }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 768px) {
+    .mc-bubble { display: none !important; }
+
+    .mc-window {
+      inset: 0 0 50px 0;
+      width: 100%;
+      height: auto;
+      max-height: none;
+      border-radius: 0;
+      animation: mc-chatOpenMobile 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .mc-header { padding: 0.9rem 1rem; }
+
+    .mc-avatar { width: 44px; height: 44px; }
+    .mc-header-title { font-size: 16px; }
+    .mc-header-status { font-size: 13px; }
+
+    .mc-close-btn {
+      width: 44px; height: 44px;
+      font-size: 20px;
+    }
+
+    .mc-body {
+      padding: 16px 12px 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mc-msg { font-size: 15px; line-height: 1.6; padding: 11px 15px; }
+
+    .mc-quick-btn { padding: 9px 16px; font-size: 13px; }
+
+    .mc-input-area { padding: 10px 12px; gap: 10px; }
+
+    .mc-input {
+      font-size: 16px; /* prevents iOS auto-zoom */
+      padding: 12px 15px;
+      border-radius: 20px;
+    }
+
+    .mc-send-btn { width: 48px; height: 48px; flex-shrink: 0; }
+
+    .mc-footer { display: none; }
+  }
 </style>
 
 <script>
@@ -206,12 +264,17 @@ PAMOKOS:
 - Puslentė: 10€/2h, 25€/diena
 
 STOVYKLA:
-- Kaina: 300€ (įskaitant pamokas, įrangos nuomą, maitinimą ir renginius. kelios pamainos yra pigesnės)
-- Nuo birželio vidurio
+- Nuo birželio vidurio iki rugpjūčio pabaigos
 - 8-10 moksleivių grupės
 - 5 dienos, 9:00-17:00
 - Registracija: forma + 100€ avansas
 - Avansas negrąžinamas
+- Įskaičiuota: pamokos, įrangos nuoma, maitinimas ir renginiai
+
+STOVYKLOS PAMAINOS 2026:
+<?= addslashes(trim($_chat_sessions_text)) ?>
+
+(Pamainos su žyme PILNA – vietos užimtos. Laisvose pamainose galima registruotis.)
 
 KONTAKTAI:
 - VšĮ Banglentė, Vėtros g. 8, Klaipėda
@@ -408,5 +471,8 @@ TAISYKLĖS:
 
   // Initial render
   render();
+
+  // Global opener so the footer nav button can trigger the chat on mobile
+  window.molasOpenChat = () => { isOpen = true; render(); };
 })();
 </script>

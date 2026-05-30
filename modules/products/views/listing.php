@@ -1,5 +1,5 @@
 <div class="products-container">
-    <h2>Pliažo prekės</h2>
+    <h2><?= $page_title ?></h2>
     <div class="product-grid">
     <?php foreach ($products as $product) { ?>
         <form method="POST" action="<?= BASE_URL ?>products/add_to_cart" class="product-item">
@@ -7,9 +7,9 @@
             <input type="hidden" name="quantity" value="1">
 
             <a href="products/item/<?= $product->id ?>">
-                <img src="<?= $product->picture_path ?>" alt="<?= $product->name ?>" class="product-image">
+                <img src="<?= $product->picture_path ?>" alt="<?= out($product->name) ?>" class="product-image">
                 <div class="product-info">
-                    <h3 class="product-name"><?= $product->name ?></h3>
+                    <h3 class="product-name"><?= out($product->name) ?></h3>
                     <p class="product-price">€<?= number_format($product->price, 2) ?></p>
                 </div>
             </a>

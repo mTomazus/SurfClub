@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Baskervville:ital@0;1&display=swap" rel="stylesheet"><base href="<?= BASE_URL ?>">
 <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="<?= BASE_URL ?>css/trongate.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/app.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/shop.css">
 <title>Molas Surf Shop</title>

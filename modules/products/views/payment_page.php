@@ -1,5 +1,5 @@
 <div class="payment-section">   
-    <div style="pading-inline:2rem;">
+    <div style="padding-inline:2rem;">
         <h2>Order Summary</h2>
 
         <?php if (!empty($items)) { ?>
@@ -16,7 +16,7 @@
                 <?php $total = 0; foreach ($items as $item): ?>
                     <?php $line_total = $item->price * $item->quantity; $total += $line_total; ?>
                     <tr>
-                        <td><?= $item->name ?></td>
+                        <td><?= out($item->name) ?></td>
                         <td><?= $item->quantity ?></td>
                         <td>€<?= number_format($item->price, 2) ?></td>
                         <td>€<?= number_format($line_total, 2) ?></td>

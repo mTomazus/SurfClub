@@ -40,7 +40,7 @@ class Events extends Trongate {
 
         $this->validation->set_rules('title', 'title', 'required|min_length[2]|max_length[255]');
         $this->validation->set_rules('description', 'description', 'required|min_length[2]');
-        $this->validation->set_rules('email', 'email', 'required|min_length[7]|max_length[255]|valid_email');
+        $this->validation->set_rules('email', 'email', 'min_length[7]|max_length[255]|valid_email');
         $this->validation->set_rules('phone', 'phone', 'required|min_length[6]|max_length[50]');
         $this->validation->set_rules('start_time', 'start_time', 'required');
 

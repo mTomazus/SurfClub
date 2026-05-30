@@ -13,6 +13,7 @@ class Camps extends Trongate {
         $show_only = $this->get_show_only();
 
         $data['registrations'] = $this->get_all_registrations($show_only);
+        $data['stats'] = $this->get_camp_stats();
 
         $data['view_file'] = 'reservations';
 
@@ -83,6 +84,45 @@ class Camps extends Trongate {
         return $registrations;
     }
 
+    private function get_camp_stats(): array {
+        $pamainos = [
+            1  => ['dates' => '2026-06-08 – 06-12'],
+            2  => ['dates' => '2026-06-15 – 06-19'],
+            3  => ['dates' => '2026-06-22 – 06-26'],
+            4  => ['dates' => '2026-06-29 – 07-03'],
+            5  => ['dates' => '2026-07-06 – 07-10'],
+            6  => ['dates' => '2026-07-13 – 07-17'],
+            7  => ['dates' => '2026-07-20 – 07-24'],
+            8  => ['dates' => '2026-07-27 – 07-31'],
+            9  => ['dates' => '2026-08-03 – 08-07'],
+            10 => ['dates' => '2026-08-10 – 08-14'],
+            11 => ['dates' => '2026-08-17 – 08-21'],
+            12 => ['dates' => '2026-08-24 – 08-28'],
+        ];
+
+        foreach ($pamainos as $num => &$p) {
+            $p['total'] = 0;
+            $p['paid']  = 0;
+            $p['max']   = 12;
+        }
+        unset($p);
+
+        $all = $this->model->get('id asc', 'camps');
+        if ($all) {
+            foreach ($all as $reg) {
+                $num = (int) $reg->pamaina; // pamaina strings start with the number
+                if (isset($pamainos[$num])) {
+                    $pamainos[$num]['total']++;
+                    if ($reg->status === 'completed') {
+                        $pamainos[$num]['paid']++;
+                    }
+                }
+            }
+        }
+
+        return $pamainos;
+    }
+
     /**           -----SOON----
     * Display a soon info instead of form.
     */
@@ -151,7 +191,7 @@ class Camps extends Trongate {
             ]
         ];
 
-        $api_secret = constant('BREVO_API_KEY');
+        $api_secret = constant('BREVO_API');
 
         curl_setopt_array($curl, [
             CURLOPT_URL => "https://api.brevo.com/v3/smtp/email",

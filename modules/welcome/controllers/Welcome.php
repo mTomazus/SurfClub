@@ -37,20 +37,7 @@ class Welcome extends Trongate {
 		$this->template('public', $data);
 	}
 	public function index(): void {
-        $data['view_module'] = 'welcome';
-        if (isset($_GET['lang'])) {
-            $_SESSION['language_code'] = preg_replace('/[^a-z]/', '', $_GET['lang']);
-        } 
-        $lang = (isset($_SESSION['language_code'])) ? $_SESSION['language_code'] : 'lt';
-        $page_id = 1; // This is the ID for the surf camp page
-
-        $sql = "SELECT title, description FROM lang_translations WHERE page_id = ? AND language_code = ?";
-        $result = $this->model->query_bind($sql, [$page_id, $lang], 'object');
-        
-        $data['page_title'] = $result[0]->title;
-        $data['translated_html'] = $result[0]->description;
-        $data['view_file'] = 'stovykla';
-        $this->template('public', $data);
+        $this->stovykla();
 	}
     public function admin(): void {
         $this->module('trongate_security');
@@ -97,15 +84,16 @@ class Welcome extends Trongate {
         $data['view_module'] = 'welcome';
         if (isset($_GET['lang'])) {
             $_SESSION['language_code'] = preg_replace('/[^a-z]/', '', $_GET['lang']);
-        } 
+        }
         $lang = (isset($_SESSION['language_code'])) ? $_SESSION['language_code'] : 'lt';
         $page_id = 1; // This is the ID for the surf camp page
 
         $sql = "SELECT title, description FROM lang_translations WHERE page_id = ? AND language_code = ?";
         $result = $this->model->query_bind($sql, [$page_id, $lang], 'object');
-        
+
         $data['page_title'] = $result[0]->title;
         $data['translated_html'] = $result[0]->description;
+        $data['sessions'] = $this->model->get('pamaina asc', 'camps_pamainos');
         $data['view_file'] = 'stovykla';
         $this->template('public', $data);
     }

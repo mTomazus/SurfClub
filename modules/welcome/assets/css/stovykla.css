@@ -231,11 +231,127 @@ filter: blur(0px);
 transform: translateX(0) ;
 }
 
-/* Extra small devices (portrait phones, less than 576px) */
+.hero-pamainos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+.pamainos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    width: 100%;
+    max-width: 900px;
+}
+.pamaina-card {
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+    align-items: center;
+    justify-items: center;
+    gap: 0.3rem;
+    padding: 1rem 0.5rem;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 1rem;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(4px);
+    transition: background 0.3s;
+}
+.pamaina-card:not(.pamaina-unavailable):hover {
+    background: rgba(255,255,255,0.18);
+}
+.pamaina-unavailable {
+    opacity: 0.45;
+}
+.pamaina-nr {
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    color: var(--clr-light);
+    text-shadow: 0 0.2rem 0.5rem #00000075;
+}
+.pamaina-dates {
+    font-family: "Source Sans Pro", sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--clr-light);
+    letter-spacing: 0.04em;
+    text-shadow: 0 0.1rem 0.3rem #00000075;
+}
+.pamaina-price {
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--clr-light);
+    text-shadow: 0 0.1rem 0.3rem #00000075;
+}
+.pamaina-status {
+    font-family: "Source Sans Pro", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--clr-light);
+    text-shadow: none;
+}
+.pamaina-card:not(.pamaina-unavailable) .pamaina-status {
+    color: #7effb2;
+}
 
-/* Small devices (landscape phones, 576px and up) */
-@media (min-width: 576px) {
-    
+/* ─── MOBILE (< 768px) ─── */
+@media (max-width: 768px) {
+
+    .hero {
+        padding: 1.5rem 5vw;
+        min-height: calc(100svh - 100px);
+    }
+
+    /* Hero 1 title: "banglenčių stovykla" — was floored at 5rem (80px), way too big */
+    .hero h1 {
+        font-size: clamp(2.2rem, 9vw, 3.5rem);
+        line-height: 1.05;
+    }
+    .hero h1:first-child {
+        font-size: clamp(1.8rem, 7.5vw, 3rem);
+    }
+
+    /* Section headings */
+    .hero h2 {
+        font-size: clamp(1.8rem, 7vw, 2.8rem);
+        margin-bottom: 1rem;
+    }
+
+    /* Sub-headings: line-height was 7vw (≈26px) but font was 2rem (32px) — fixed */
+    .hero h3 {
+        font-size: clamp(1rem, 4vw, 1.5rem);
+        line-height: 1.45;
+    }
+
+    .hero h4 {
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    /* Year display: was floored at 5rem, now truly fluid */
+    .metai {
+        font-size: clamp(3.5rem, 20vw, 6rem) !important;
+        line-height: 1.1 !important;
+    }
+
+    p {
+        font-size: 1rem;
+    }
+
+    /* Sessions grid: 2 columns on mobile instead of auto-fill */
+    .pamainos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+    }
+    .pamaina-nr    { font-size: 1.5rem; }
+    .pamaina-dates { font-size: 0.85rem; }
+    .pamaina-price { font-size: 0.95rem; }
+    .pamaina-status { font-size: 0.7rem; }
+    .pamaina-card  { padding: 0.75rem 0.4rem; }
 }
 
 /* Medium devices (tablets, 768px and up) */

@@ -30,21 +30,34 @@
         echo form_dropdown('status', ['active' => 'Active', 'inactive' => 'Inactive'], $status);
 
         echo form_label('Categories');
-        $name = 'categories[]';
-        $options = ['3' => 'New', '1' => 'Surf', '2' => 'Beach', '4' => 'Best'];
-        $selected_key = 'new';
-        $attributes = ['required' => 'required','multiple' => 'true', 'class'  => 'multiple', 'aria-required' => 'true'];
-        echo form_dropdown($name, $options, $selected_key, $attributes);
+        $attributes = ['required' => 'required', 'multiple' => 'true', 'class' => 'multiple', 'aria-required' => 'true'];
+        echo form_dropdown('categories[]', $category_options, $selected_categories, $attributes);
 
         echo '<hr><strong>Variants</strong><br>';
+        echo '<div id="variants-container">';
         echo form_label('Variant 1 (e.g., Size: M)');
         echo form_input('variants[]', '', ["placeholder" => "e.g., Size: M"]);
-
         echo form_label('Variant 2');
         echo form_input('variants[]', '', ["placeholder" => "e.g., Size: L"]);
-
         echo form_label('Variant 3');
         echo form_input('variants[]', '', ["placeholder" => "e.g., Size: XL"]);
+        echo '</div>';
+        echo '<button type="button" onclick="addVariant()" style="margin:0.5rem 0 1rem">+ Add variant</button>';
+        echo '<script>
+function addVariant() {
+    var c = document.getElementById("variants-container");
+    var n = Math.floor(c.children.length / 2) + 1;
+    var lbl = document.createElement("label");
+    lbl.textContent = "Variant " + n;
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.name = "variants[]";
+    inp.placeholder = "e.g., Size: M";
+    inp.className = "trongate-input";
+    c.appendChild(lbl);
+    c.appendChild(inp);
+}
+</script>';
 
         echo form_hidden('image', $image);
 

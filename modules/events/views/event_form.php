@@ -2,7 +2,7 @@
     <div id="error-msg"></div>
     <?php
     $form_attr = [
-        'mx-post' => 'events/submit_event/' . $id ,
+        'mx-post' => 'events/submit_event/' . ($id ?? ''),
         'mx-on-success' => '#events-container',
         'mx-close-on-success' => 'true',
         'mx-target' => '#information',
