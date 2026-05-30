@@ -1,56 +1,70 @@
-<h1><?= out($headline) ?></h1>
-<?php
-flashdata();
-echo '<p>'.anchor('galleries/create', 'Create New Gallery Record', array("class" => "button"));
-if(strtolower(ENV) === 'dev') {
-    echo anchor('api/explorer/galleries', 'API Explorer', array("class" => "button alt"));
-}
-echo '</p>';
-echo Pagination::display($pagination_data);
-if (count($rows)>0) { ?>
-    <table id="results-tbl">
-        <thead>
-            <tr>
-                <th colspan="2">
-                    <div>
-                        <div><?php
-                        echo form_open('galleries/manage/1/', array("method" => "get"));
-                        echo form_search('searchphrase', '', array("placeholder" => "Search records..."));
-                        echo form_submit('submit', 'Search', array("class" => "alt"));
-                        echo form_close();
-                        ?></div>
-                        <div>Records Per Page: <?php
-                        $dropdown_attr['onchange'] = 'setPerPage()';
-                        echo form_dropdown('per_page', $per_page_options, $selected_per_page, $dropdown_attr); 
-                        ?></div>
+<div id="title" style="display:none"><h1>Galleries</h1></div>
 
-                    </div>                    
-                </th>
-            </tr>
-            <tr>
-                <th>Year</th>
-                <th>Session</th>
-                <th style="width: 20px;">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php 
-            $attr['class'] = 'button alt';
-            foreach($rows as $row) { ?>
-            <tr>
-                <td><?= out($row->year) ?></td>
-                <td><?= out($row->pamaina) ?></td>
-                <td><?= anchor('galleries/show/'.$row->id, 'View', $attr) ?></td>
-            </tr>
+<div id="stat-panel">
+    <a class="stat-card">
+        <span class="stat-label">Galleries</span>
+        <span class="stat-count"><?= $pagination_data['total_rows'] ?></span>
+    </a>
+</div>
+
+<div id="galleries-container">
+
+<div class="gal-toolbar" id="results-tbl">
+    <div class="gal-toolbar__search">
+        <?php
+        echo form_open('galleries/manage/1/', array("method" => "get"));
+        echo form_search('searchphrase', '', array("placeholder" => "Search galleries..."));
+        echo form_submit('submit', 'Search');
+        echo form_close();
+        ?>
+    </div>
+    <div class="gal-toolbar__right">
+        <label class="gal-per-page-label">
+            Per page
             <?php
-            }
+            $dropdown_attr['onchange'] = 'setPerPage()';
+            echo form_dropdown('per_page', $per_page_options, $selected_per_page, $dropdown_attr);
             ?>
-        </tbody>
-    </table>
-<?php 
-    if(count($rows)>9) {
+        </label>
+        <?= anchor('galleries/create', '<i class="fa fa-plus"></i> New Gallery', array("class" => "button gal-create-btn")) ?>
+    </div>
+</div>
+
+<?php flashdata(); ?>
+<?= Pagination::display($pagination_data) ?>
+
+<?php if (count($rows) > 0): ?>
+    <?php
+    $by_year = [];
+    foreach ($rows as $row) {
+        $by_year[$row->year][] = $row;
+    }
+    krsort($by_year);
+    ?>
+    <div class="gal-year-groups">
+        <?php foreach ($by_year as $year => $sessions): ?>
+        <section class="gal-year-section">
+            <div class="gal-year-badge"><?= (int) $year ?></div>
+            <div class="gal-session-grid">
+                <?php foreach ($sessions as $row): ?>
+                <a href="<?= BASE_URL ?>galleries/show/<?= $row->id ?>" class="gal-session-card">
+                    <i class="fa fa-picture-o gal-session-icon"></i>
+                    <span class="gal-session-label">Session <?= out($row->pamaina) ?></span>
+                    <span class="gal-session-cta">View <i class="fa fa-arrow-right"></i></span>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endforeach; ?>
+    </div>
+
+    <?php if (count($rows) > 9):
         unset($pagination_data['include_showing_statement']);
         echo Pagination::display($pagination_data);
-    }
-}
-?>
+    endif; ?>
+
+<?php else: ?>
+    <p class="gal-empty">No galleries found.</p>
+<?php endif; ?>
+
+</div>

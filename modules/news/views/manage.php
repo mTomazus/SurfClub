@@ -1,4 +1,13 @@
-<h1><?= $headline ?></h1>
+<div id="title" style="display:none"><h1><?= $headline ?></h1></div>
+
+<div id="stat-panel">
+    <a class="stat-card">
+        <span class="stat-label">News</span>
+        <span class="stat-count"><?= $pagination_data['total_rows'] ?></span>
+    </a>
+</div>
+
+<div id="news-container">
 <?php
 flashdata();
 echo '<p>'.anchor('news/create', 'Create New News Record', array("class" => "button")).'</p>';
@@ -61,6 +70,7 @@ if (count($rows)>0) { ?>
     }
 }
 ?>
+</div>
 <style>
 #results-tbl .fa-circle,
 #results-tbl .fa-circle-o,

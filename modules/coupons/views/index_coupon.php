@@ -1,6 +1,12 @@
-<div id="title">
-    <h1>Surf Coupons</h1>
+<div id="title" style="display:none"><h1>Coupons</h1></div>
+
+<div id="stat-panel">
+    <a class="stat-card">
+        <span class="stat-label">Module</span>
+        <span class="stat-count" style="font-size:1.1rem">Coupons</span>
+    </a>
 </div>
+
 <div id="coupons" class="container">
     <h2 class="mt-1">Surf Coupons</h2>
     <h3 class="mb-1">Add Coupons Here</h3>

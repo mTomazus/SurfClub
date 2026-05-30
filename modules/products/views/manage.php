@@ -1,4 +1,13 @@
-<h1><?= out($headline) ?></h1>
+<div id="title" style="display:none"><h1><?= out($headline) ?></h1></div>
+
+<div id="stat-panel">
+    <a class="stat-card">
+        <span class="stat-label">Products</span>
+        <span class="stat-count"><?= $pagination_data['total_rows'] ?></span>
+    </a>
+</div>
+
+<div id="products-container">
 <?php
 flashdata();
 echo '<p>'.anchor('products/create', 'Create New Product Record', array("class" => "button"));
@@ -65,4 +74,5 @@ if (count($rows)>0) { ?>
         echo Pagination::display($pagination_data);
     }
 }
+?></div><?php
 ?>

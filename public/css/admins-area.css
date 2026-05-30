@@ -633,3 +633,469 @@ thead {
         transition-duration: .01ms !important;
     }
 }
+
+/* ── Gallery manage page ─────────────────────────────────── */
+.gal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    background: hsl(276 90% 8% / .65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(196 100% 52% / .15);
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+}
+
+.gal-toolbar__search form {
+    display: flex;
+    flex-direction: row;
+    grid-template-columns: unset;
+    gap: 0.4rem;
+    width: auto;
+    align-items: center;
+}
+
+.gal-toolbar__search input[type="search"] {
+    width: 200px;
+    height: 34px;
+    background: hsl(276 80% 5% / .55);
+    border: 1px solid hsl(196 100% 52% / .25);
+    color: floralwhite;
+    padding: 0 0.65rem;
+    font-family: silom;
+    font-size: 0.8rem;
+}
+
+.gal-toolbar__search button {
+    height: 34px;
+    padding: 0 0.85rem;
+    font-size: 0.75rem;
+    border: 1px solid hsl(196 100% 52% / .3);
+    background: hsl(196 100% 52% / .12);
+    color: hsl(196 100% 78%);
+    letter-spacing: 0.04em;
+}
+
+.gal-toolbar__search button:hover {
+    background: hsl(196 100% 52% / .25);
+    border-color: hsl(196 100% 52% / .55);
+    color: floralwhite;
+}
+
+.gal-toolbar__right {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.gal-per-page-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: hsl(276 25% 65%);
+    white-space: nowrap;
+}
+
+.gal-per-page-label select {
+    height: 30px;
+    background: hsl(276 80% 6% / .7);
+    border: 1px solid hsl(196 100% 52% / .2);
+    color: hsl(276 20% 80%);
+    font-family: silom;
+    font-size: 0.75rem;
+    padding: 0 0.4rem;
+}
+
+.gal-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 34px;
+    padding: 0 0.9rem;
+    background: hsl(196 100% 52% / .18) !important;
+    border: 1px solid hsl(196 100% 52% / .45) !important;
+    color: hsl(196 100% 82%) !important;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background var(--dur-micro) var(--ease-out),
+                color     var(--dur-micro) var(--ease-out),
+                border-color var(--dur-micro) var(--ease-out);
+}
+
+.gal-create-btn:hover {
+    background: hsl(196 100% 52% / .32) !important;
+    border-color: hsl(196 100% 52% / .7) !important;
+    color: floralwhite !important;
+}
+
+.gal-year-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin: 1rem 0;
+}
+
+.gal-year-badge {
+    font-family: silom;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: hsl(196 100% 60%);
+    letter-spacing: -0.03em;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid hsl(196 100% 52% / .2);
+    text-shadow: 0 0 24px hsl(196 100% 52% / .35);
+    display: inline-block;
+}
+
+.gal-session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.85rem;
+}
+
+.gal-session-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 1.25rem 0.75rem 1rem;
+    background: hsl(276 80% 7% / .6);
+    border: 1px solid hsl(196 100% 52% / .18);
+    border-radius: 6px;
+    text-decoration: none;
+    color: floralwhite;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: border-color var(--dur-std) var(--ease-out),
+                background   var(--dur-std) var(--ease-out),
+                box-shadow   var(--dur-std) var(--ease-out),
+                transform    var(--dur-micro) var(--ease-out);
+}
+
+.gal-session-card:hover {
+    border-color: hsl(196 100% 52% / .55);
+    background: hsl(276 80% 11% / .75);
+    box-shadow: 0 0 18px hsl(196 100% 52% / .18),
+                0 4px 14px hsl(276 80% 5% / .5);
+    transform: translateY(-2px);
+    color: floralwhite;
+}
+
+.gal-session-card:active {
+    transform: translateY(0);
+    transition-duration: 80ms;
+}
+
+.gal-session-icon {
+    font-size: 1.8rem;
+    color: hsl(196 100% 52% / .45);
+    transition: color var(--dur-std) var(--ease-out);
+}
+
+.gal-session-card:hover .gal-session-icon {
+    color: hsl(196 100% 65% / .8);
+}
+
+.gal-session-label {
+    font-family: silom;
+    font-size: 0.82rem;
+    color: hsl(276 15% 78%);
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+.gal-session-cta {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: hsl(196 100% 52% / .5);
+    transition: color var(--dur-std) var(--ease-out);
+}
+
+.gal-session-card:hover .gal-session-cta {
+    color: hsl(196 100% 70%);
+}
+
+.gal-empty {
+    color: hsl(276 20% 55%);
+    text-align: center;
+    font-style: italic;
+    padding: 3rem 1rem;
+}
+
+@media (max-width: 560px) {
+    .gal-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gal-toolbar__search form {
+        width: 100%;
+    }
+
+    .gal-toolbar__search input[type="search"] {
+        flex: 1;
+        width: auto;
+    }
+
+    .gal-toolbar__right {
+        justify-content: space-between;
+    }
+
+    .gal-session-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+/* ── Gallery show page ───────────────────────────────────── */
+.gal-show-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    background: hsl(276 90% 8% / .65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(196 100% 52% / .15);
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+}
+
+.gal-show-identity {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.gal-show-year {
+    font-family: silom;
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: hsl(196 100% 62%);
+    letter-spacing: -0.03em;
+    text-shadow: 0 0 20px hsl(196 100% 52% / .35);
+    line-height: 1;
+}
+
+.gal-show-sep {
+    font-family: silom;
+    font-size: 1.4rem;
+    color: hsl(276 30% 50%);
+    line-height: 1;
+}
+
+.gal-show-session {
+    font-family: silom;
+    font-size: 1rem;
+    color: hsl(276 20% 75%);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.gal-show-id {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(276 20% 48%);
+    padding: 0.15rem 0.45rem;
+    border: 1px solid hsl(276 40% 35% / .4);
+    border-radius: 3px;
+    align-self: center;
+}
+
+.gal-show-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.gal-btn-back,
+.gal-btn-edit,
+.gal-btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 34px;
+    padding: 0 0.85rem;
+    font-family: silom;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background var(--dur-micro) var(--ease-out),
+                border-color var(--dur-micro) var(--ease-out),
+                color var(--dur-micro) var(--ease-out);
+}
+
+.gal-btn-back {
+    background: hsl(276 60% 10% / .6) !important;
+    border: 1px solid hsl(276 40% 45% / .35) !important;
+    color: hsl(276 20% 70%) !important;
+}
+
+.gal-btn-back:hover {
+    background: hsl(276 60% 15% / .8) !important;
+    border-color: hsl(276 40% 55% / .6) !important;
+    color: floralwhite !important;
+}
+
+.gal-btn-edit {
+    background: hsl(196 100% 52% / .18) !important;
+    border: 1px solid hsl(196 100% 52% / .4) !important;
+    color: hsl(196 100% 80%) !important;
+}
+
+.gal-btn-edit:hover {
+    background: hsl(196 100% 52% / .32) !important;
+    border-color: hsl(196 100% 52% / .65) !important;
+    color: floralwhite !important;
+}
+
+.gal-btn-delete {
+    background: hsl(0 80% 45% / .18);
+    border: 1px solid hsl(0 80% 55% / .35);
+    color: hsl(0 80% 80%);
+}
+
+.gal-btn-delete:hover {
+    background: hsl(0 80% 45% / .35);
+    border-color: hsl(0 80% 55% / .6);
+    color: hsl(0 0% 100%);
+}
+
+/* ── Filezone panel overrides for galleries ──────────────── */
+.gal-show-filezone {
+    margin-bottom: 1.25rem;
+}
+
+.gal-show-filezone .card {
+    border: 1px solid hsl(196 100% 52% / .2);
+    box-shadow: 0 0 0 transparent;
+    background: hsl(276 80% 5% / .5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.gal-show-filezone .card-heading {
+    font-family: silom;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: hsl(276 25% 60%);
+    padding: 0.6rem 0.9rem 0;
+}
+
+.gal-show-filezone #gallery-pics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.5rem;
+    padding: 0.75rem;
+    margin: 0;
+}
+
+.gal-show-filezone #gallery-pics div {
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid hsl(196 100% 52% / .1);
+    aspect-ratio: 1;
+    background: hsl(276 60% 8%);
+    cursor: pointer;
+    transition: border-color var(--dur-std) var(--ease-out),
+                box-shadow   var(--dur-std) var(--ease-out),
+                transform    var(--dur-micro) var(--ease-out);
+}
+
+.gal-show-filezone #gallery-pics div:hover {
+    border-color: hsl(196 100% 52% / .5);
+    box-shadow: 0 0 14px hsl(196 100% 52% / .2);
+    transform: scale(1.03);
+}
+
+.gal-show-filezone #gallery-pics div img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    padding: 0;
+    transition: transform var(--dur-std) var(--ease-out);
+}
+
+.gal-show-filezone #gallery-pics div:hover img {
+    transform: scale(1.06);
+}
+
+.gal-show-filezone .card-body > p.text-center {
+    padding: 0.5rem 0.9rem;
+}
+
+/* ── Details + Comments row ──────────────────────────────── */
+.gal-show-secondary {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.gal-details-card,
+.gal-comments-card {
+    border: 1px solid hsl(196 100% 52% / .18);
+    box-shadow: none;
+    background: hsl(276 80% 5% / .5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.gal-details-card .card-heading,
+.gal-comments-card .card-heading {
+    font-family: silom;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: hsl(276 25% 60%);
+    padding: 0.5rem 0.9rem 0;
+    background: none;
+    border: none;
+}
+
+.gal-comment-btn {
+    background: hsl(196 100% 52% / .12) !important;
+    border: 1px solid hsl(196 100% 52% / .3) !important;
+    color: hsl(196 100% 78%) !important;
+    font-size: 0.78rem;
+}
+
+.gal-comment-btn:hover {
+    background: hsl(196 100% 52% / .25) !important;
+    color: floralwhite !important;
+}
+
+@media (max-width: 700px) {
+    .gal-show-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .gal-show-secondary {
+        grid-template-columns: 1fr;
+    }
+
+    .gal-show-filezone #gallery-pics {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    }
+}

@@ -1,6 +1,13 @@
-<div id="title"><h1>Instagram post</h1></div>
+<div id="title" style="display:none"><h1>Social</h1></div>
 
-<div id="table" class="container">
+<div id="stat-panel">
+    <a class="stat-card">
+        <span class="stat-label">Module</span>
+        <span class="stat-count" style="font-size:1.1rem">Social</span>
+    </a>
+</div>
+
+<div id="instagram-container" class="container">
 
     <div class="inst-main">
         <div class="card-heading">

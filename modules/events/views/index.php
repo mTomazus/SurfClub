@@ -1,4 +1,12 @@
-<h1 id="title">Scheduled Events</h1>
+<div id="title" style="display:none"><h1>Events</h1></div>
+
+<div id="stat-panel">
+    <a class="stat-card">
+        <span class="stat-label">Module</span>
+        <span class="stat-count" style="font-size:1.1rem">Events</span>
+    </a>
+</div>
+
 <div id="event-container" class="container">	
 	<h2 class="mt-1">Scheduled Surf Events</h2>
 	<h3 class="mb-1">Add New Event Here</h3>

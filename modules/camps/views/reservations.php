@@ -2,13 +2,13 @@
     <h1>Summer Camp Registrations</h1>
 </div>
 
-<div id="stats-panel">
+<div id="stat-panel">
     <style>
         /* ---- Stats panel ---- */
         #stat-cards {
             display:block!important;
         }
-        #stats-panel {
+        #stat-panel {
             margin: 1rem 2rem 1.5rem;
         }
         .stats-summary {
