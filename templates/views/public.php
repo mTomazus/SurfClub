@@ -6,8 +6,10 @@
 	
 	<header>
 		<?= Template::partial('partials/header') ?>
-	</header> 
-	
+	</header>
+
+	<div id="slide-nav-overlay" onclick="toggleSlideNav()"></div>
+
 	<main class="bg-grad">
 		<?= Template::display($data) ?>
 	</main>

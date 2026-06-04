@@ -1,30 +1,3 @@
-<?php
-// Fetch live camp sessions for the AI system prompt
-$_chat_sessions_text = '';
-try {
-    $_chat_db = new PDO(
-        'mysql:host=' . HOST . ';dbname=' . DATABASE . ';charset=utf8mb4',
-        USER, PASSWORD,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT]
-    );
-    $_chat_stmt = $_chat_db->query(
-        'SELECT pamaina, start, end, price, status FROM camps_pamainos ORDER BY pamaina'
-    );
-    $_chat_rows = $_chat_stmt ? $_chat_stmt->fetchAll(PDO::FETCH_OBJ) : [];
-    foreach ($_chat_rows as $_r) {
-        $label = match($_r->status) {
-            'full'  => 'PILNA',
-            'ended' => 'BAIGĖSI',
-            default => 'laisva',
-        };
-        $_chat_sessions_text .= "- {$_r->pamaina}. pamaina: {$_r->start} – {$_r->end}, {$_r->price}€ [{$label}]\n";
-    }
-    $_chat_db = null;
-} catch (Exception $_e) {
-    $_chat_sessions_text = '(pamainos šiuo metu nepasiekiamos)';
-}
-?>
-
 <div id="molas-chat-root"></div>
 
 <style>
@@ -242,51 +215,6 @@ try {
     'Įrangos nuoma'
   ];
 
-  const SYSTEM_PROMPT = `Tu esi Molas Surf Club virtualus asistentas. Tu padedi lankytojams sužinoti apie banglenčių pamokas, įrangos nuomą, vaikų vasaros stovyklą ir renginius Klaipėdoje, Melnragėje.
-
-SVARBI INFORMACIJA:
-
-PAMOKOS:
-- Pamokų paketas: 150€ (dvi 1h pamokos)
-- Privati pamoka: 85€ (1.5h trukmė)
-- Grupinė pamoka: 40€
-- Pamoka dviem: 120€
-- Individuali Plus: 100€ (1.5h pamoka + 30 min asmeninė konsultacija)
-- Komandos formavimas: nuo 200€ (6-12 žmonių)
-- Dovanų kuponai: nuo 40€ (el pastu arba popieriniai kuponai)
-
-ĮRANGOS NUOMA:
-- Banglentė: nuo 15€/2h, 40€/diena
-- Irklentė (SUP): 15€/1h, 40€/diena
-- Hidrokostiumas: 10€/2h, 20€/diena
-- Riedlentė: 15€/2h, 30€/diena
-- Skim boardas: 10€/2h, 20€/diena
-- Puslentė: 10€/2h, 25€/diena
-
-STOVYKLA:
-- Nuo birželio vidurio iki rugpjūčio pabaigos
-- 8-10 moksleivių grupės
-- 5 dienos, 9:00-17:00
-- Registracija: forma + 100€ avansas
-- Avansas negrąžinamas
-- Įskaičiuota: pamokos, įrangos nuoma, maitinimas ir renginiai
-
-STOVYKLOS PAMAINOS 2026:
-<?= addslashes(trim($_chat_sessions_text)) ?>
-
-(Pamainos su žyme PILNA – vietos užimtos. Laisvose pamainose galima registruotis.)
-
-KONTAKTAI:
-- VšĮ Banglentė, Vėtros g. 8, Klaipėda
-- Tel: +370 686 02356
-- El. paštas: info@surfclub.lt
-- www.surfclub.lt
-
-TAISYKLĖS:
-- Atsakyk draugiškai ir trumpai
-- Atsakyk ta kalba, kuria klausia
-- Jei nežinai - siūlyk susisiekti tiesiogiai
-- Būk entuziastingas dėl banglenčių sporto!`;
 
   // State
   let isOpen = false;
@@ -435,12 +363,7 @@ TAISYKLĖS:
     try {
       const convMessages = messages.slice(1).map(m => ({ role: m.role, content: m.content }));
       
-      const requestBody = {
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: SYSTEM_PROMPT,
-        messages: convMessages
-      };
+      const requestBody = { messages: convMessages };
 
       const response = await fetch(API_URL, {
         method: 'POST',
