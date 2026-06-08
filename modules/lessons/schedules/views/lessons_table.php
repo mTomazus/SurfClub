@@ -19,15 +19,7 @@ if (empty($rows)) {
 		foreach($rows as $row) { 
 			?>
 		<tr>
-			<td><?php
-				$lesson_types = [
-					1 => 'Grupinė',
-					2 => 'Privati',
-					3 => 'Dviem',
-					4 => 'Paketas'
-					];
-				echo $lesson_types[$row->lesson_id] ?? 'Nenurodyta'; 
-			?></td>
+			<td><?= out($row->name) ?></td>
 			<td><?= out($row->date) ?><br><?= out(date('H:i', strtotime($row->start_time))) ?></td>
 			<td><?= out($row->available_places - $row->reserved_places) ?></td>
 			<td><a class="button <?php if($row->reserved_places > 0) { echo 'success';} ?> mt-0" mx-get="lessons-registrations/fetch/<?= $row->id ?>" mx-build-modal='{

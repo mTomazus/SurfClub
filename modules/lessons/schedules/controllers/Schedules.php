@@ -18,14 +18,20 @@ class Schedules extends Trongate {
 
     public function lessons() {
         $data['view_file'] = 'lessons_index';
-        $data['rows'] = $this->model->get('date', 'lesson_schedules');
+        $sql = 'SELECT ls.id AS id, l.name, ls.date, ls.start_time, available_places, reserved_places
+                FROM lesson_schedules AS ls JOIN lessons AS l ON ls.lesson_id = l.id
+                ORDER BY ls.date';
+        $data['rows'] = $this->model->query($sql, 'object');
         $this->template('admin_area', $data);
     }
 
     public function fetch_lessons() {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-    	$data['rows'] = $this->model->get('id', 'lesson_schedules');
+        $sql = 'SELECT ls.id AS id, l.name, ls.date, ls.start_time, available_places, reserved_places
+                FROM lesson_schedules AS ls JOIN lessons AS l ON ls.lesson_id = l.id
+                ORDER BY ls.id';
+        $data['rows'] = $this->model->query($sql, 'object');
     	$this->view('lessons_table', $data);
     }
 
