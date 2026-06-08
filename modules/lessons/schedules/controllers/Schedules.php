@@ -20,6 +20,7 @@ class Schedules extends Trongate {
         $data['view_file'] = 'lessons_index';
         $sql = 'SELECT ls.id AS id, l.name, ls.date, ls.start_time, available_places, reserved_places
                 FROM lesson_schedules AS ls JOIN lessons AS l ON ls.lesson_id = l.id
+                WHERE ls.date >= CURDATE()
                 ORDER BY ls.date';
         $data['rows'] = $this->model->query($sql, 'object');
         $this->template('admin_area', $data);
@@ -30,7 +31,8 @@ class Schedules extends Trongate {
         $this->trongate_security->_make_sure_allowed();
         $sql = 'SELECT ls.id AS id, l.name, ls.date, ls.start_time, available_places, reserved_places
                 FROM lesson_schedules AS ls JOIN lessons AS l ON ls.lesson_id = l.id
-                ORDER BY ls.id';
+                WHERE ls.date >= CURDATE()
+                ORDER BY ls.date';
         $data['rows'] = $this->model->query($sql, 'object');
     	$this->view('lessons_table', $data);
     }
