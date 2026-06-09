@@ -143,6 +143,38 @@
     <h1 class="mt-1 mb-1 text-center">Stovyklos Registracijos</h1>
 <?php if (!empty($registrations)): ?>
     <div class="table-responsive d-sm">
+        <?php if (!empty($email_shift)): ?>
+            <?php $unsent = $email_shift['recipient_count'] - $email_shift['sent_count']; ?>
+            <div class="camp-email-bar" style="text-align: center;margin-block-end: 1rem;display:grid;">
+                <button type="button" class="email-btn" onclick="openModal('camp-email-modal')" style="width: fit-content; margin-inline: auto;margin-block-end:1rem;">
+                    <i class="fa fa-envelope-o" aria-hidden="true"></i> Siųsti priminimą · Pamaina <?= $email_shift['num'] ?> · <?= $email_shift['recipient_count'] ?> gavėjams
+                </button>
+                <?php if ($email_shift['last_sent']): ?>
+                    <span class="email-sent-note">Jau išsiųsta: <?= date('Y-m-d H:i', strtotime($email_shift['last_sent'])) ?> (<?= $email_shift['sent_count'] ?>/<?= $email_shift['recipient_count'] ?>)</span>
+                <?php endif; ?>
+                <div id="send-result"></div>
+            </div>
+
+            <div class="modal" id="camp-email-modal" style="display:none">
+                <div class="modal-heading"><i class="fa fa-envelope"></i> Siųsti laišką pamainai <?= $email_shift['num'] ?></div>
+                <div class="modal-body">
+                    <p>Pamaina: <strong><?= out($email_shift['label']) ?></strong></p>
+                    <?php if ($unsent > 0): ?>
+                        <p>Bus išsiųsta <strong><?= $unsent ?></strong> dar negavusiems dalyviams.</p>
+                        <button class="email-confirm" mx-post="camps/send_shift_email/<?= $email_shift['num'] ?>" mx-target="#send-result" mx-indicator="#send-spinner" mx-close-on-success="true" onclick="closeModal()">Siųsti</button>
+                    <?php else: ?>
+                        <p>Visiems šios pamainos dalyviams jau išsiųsta.</p>
+                    <?php endif; ?>
+                    <?php if ($email_shift['sent_count'] > 0): ?>
+                        <button class="email-resend" mx-post="camps/send_shift_email/<?= $email_shift['num'] ?>" mx-vals='{"resend":"1"}' mx-target="#send-result" mx-indicator="#send-spinner" mx-close-on-success="true" onclick="closeModal()">Siųsti visiems iš naujo (<?= $email_shift['recipient_count'] ?>)</button>
+                    <?php endif; ?>
+                    <button type="button" class="email-cancel" onclick="closeModal()">Atšaukti</button>
+                    <span id="send-spinner" style="display:none"><i class="fa fa-spinner fa-spin"></i> Siunčiama…</span>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="camp-email-bar muted">Pasirink pamainą laiškams siųsti.</div>
+        <?php endif; ?>
         <table class="table table-striped table-bordered">
             <thead>
                 <tr>
@@ -168,7 +200,6 @@
 <?php else: ?>
     <p>No registrations found.</p>
 <?php endif; ?>
-</div>
 
 <style>
     h1 {
@@ -183,6 +214,37 @@
         margin: 0 0.5rem;
         padding: 0.5em 0.2rem;
     }
+    .camp-email-bar {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 1rem;
+    }
+    .camp-email-bar.muted {
+        color: #888;
+        font-style: italic;
+    }
+    .camp-email-bar .email-btn {
+        background: #2e7d52;
+        color: #fff;
+        border: 0;
+        border-radius: 5px;
+        padding: 0.5rem 0.9rem;
+        cursor: pointer;
+        margin: 0;
+    }
+    .camp-email-bar .email-sent-note {
+        font-size: 0.85rem;
+        color: #777;
+    }
+    #send-result { flex-basis: 100%; }
+    .send-result-box { font-size: 0.9rem; }
+    .send-result-box .sr-ok { color: #2e7d52; margin: 0.25rem 0; }
+    .send-result-box .sr-fail { color: #c0392b; margin: 0.25rem 0; }
+    .send-result-box .sr-none { color: #777; margin: 0.25rem 0; }
+    .modal .email-resend { background: #b9770e; color: #fff; border: 0; }
     .nav {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
@@ -269,3 +331,5 @@
     .stat-free  { color: #a8d8ff; }
     .stat-full-label { color: #ff9090; font-weight: 600; }
 </style>
+
+</div>

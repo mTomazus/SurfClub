@@ -1,0 +1,273 @@
+[
+  {
+    "id": "SHOP-001",
+    "title": "Stock not decremented after confirmed payment",
+    "priority": "P0",
+    "type": "bug",
+    "status": "open",
+    "description": "When an order is confirmed as 'paid' (via payment_result or webhook), neither products.in_stock nor products_variants.stock is reduced. This causes inventory to drift immediately after the first sale.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "In payment_result() and webhook() after status='settled' is confirmed, iterate over products_orders_items for that order_id. If product has active variants, decrement products_variants.stock for the matching variant; otherwise decrement products.in_stock. Floor at 0 — do not fail the order if stock would go negative.",
+    "acceptance_criteria": [
+      "Note product in_stock before placing order",
+      "Complete full checkout and EveryPay demo payment",
+      "Verify in_stock in DB is reduced by the ordered quantity after confirmation"
+    ]
+  },
+  {
+    "id": "SHOP-002",
+    "title": "Cart quantity not capped to available stock",
+    "priority": "P0",
+    "type": "bug",
+    "status": "open",
+    "description": "add_to_cart() and update_cart() write quantities to $_SESSION['cart'] without checking in_stock. A shopper can add more items than physically available.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "In add_to_cart() (line ~140) and update_cart() (line ~159), query in_stock (or products_variants.stock if variant is selected) and cap the session quantity. If stock = 0, reject the add and return an error message.",
+    "acceptance_criteria": [
+      "Set a product's in_stock to 2",
+      "Attempt to add 5 units to cart",
+      "Verify cart shows quantity 2, not 5",
+      "Verify add-to-cart button is disabled when in_stock = 0"
+    ]
+  },
+  {
+    "id": "SHOP-003",
+    "title": "Webhook does not reliably confirm payment when shopper closes browser",
+    "priority": "P0",
+    "type": "bug",
+    "status": "open",
+    "description": "payment_result() only runs when the shopper is redirected back from EveryPay. If the browser is closed before redirect, the order stays 'pending' forever. webhook() exists but it is unclear if it fully updates order status, decrements stock, and triggers email.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "Audit webhook() (line ~443). It must: (1) verify EveryPay signature/status, (2) update products_orders.status to 'paid', (3) call the same stock-decrement logic as SHOP-001, (4) send confirmation email (SHOP-005). Extract shared logic into a private _confirm_order($order_id) method called by both payment_result() and webhook().",
+    "acceptance_criteria": [
+      "Complete payment on EveryPay demo",
+      "Do NOT follow redirect back — close browser",
+      "Simulate EveryPay webhook POST to /products/webhook",
+      "Verify order status is 'paid' in DB",
+      "Verify stock decremented and email sent"
+    ]
+  },
+  {
+    "id": "SHOP-004",
+    "title": "Discount price ignored in cart and checkout totals",
+    "priority": "P0",
+    "type": "bug",
+    "status": "open",
+    "description": "products.discount_price column exists and is saved via admin, but cart, checkout, and order creation logic may be using the full price field instead of discount_price when it is set. Shoppers are charged the wrong amount.",
+    "affected_files": [
+      "modules/products/controllers/Products.php",
+      "modules/products/views/cart.php",
+      "modules/products/views/cart_panel.php",
+      "modules/products/views/checkout.php",
+      "modules/products/views/payment_page.php"
+    ],
+    "implementation_notes": "Wherever a line total is calculated use: (discount_price > 0) ? discount_price : price. Applies to: checkout() total calculation (~line 288), cart.php display, cart_panel.php display. The price stored in products_orders_items must be the actual charged price (discount_price when set).",
+    "acceptance_criteria": [
+      "Create a product with price=50 and discount_price=30",
+      "Add to cart — cart should show 30",
+      "Proceed to checkout — total should reflect 30",
+      "Complete order — products_orders_items.price should store 30"
+    ]
+  },
+  {
+    "id": "SHOP-005",
+    "title": "Broken category routes — deleted view files",
+    "priority": "P0",
+    "type": "bug",
+    "status": "open",
+    "description": "Views beach.php, naujos.php, products.php, surf.php are deleted (shown as D in git status). The controller still has index(), naujos(), surf(), beach() methods that reference them. These routes return errors.",
+    "affected_files": [
+      "modules/products/controllers/Products.php",
+      "modules/products/views/listing.php"
+    ],
+    "implementation_notes": "Replace the four dead methods with a single category($slug) method that: (1) queries products_categories table for the slug, (2) 404s if not found, (3) calls _listing($slug, $category->name). All existing category links should point to /products/category/{slug}. listing.php already exists and should be reused.",
+    "acceptance_criteria": [
+      "Navigate to /products/category/surf — page loads with surf products",
+      "Navigate to /products/category/beach — page loads with beach products",
+      "Navigate to /products/category/invalid — returns 404",
+      "Old routes /products/surf, /products/beach no longer throw errors"
+    ]
+  },
+  {
+    "id": "SHOP-006",
+    "title": "Admin endpoints missing security checks",
+    "priority": "P0",
+    "type": "security",
+    "status": "open",
+    "description": "Admin methods create(), submit(), submit_delete(), show(), and manage() should all call $this->trongate_security->_make_sure_allowed() before executing. Without this, unauthenticated users can access admin routes directly.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "Add $this->trongate_security->_make_sure_allowed() as the first line of each admin method. Reference the Events module controller for the correct pattern.",
+    "acceptance_criteria": [
+      "Log out of admin",
+      "Navigate directly to /products/create",
+      "Verify redirect to login — not the create form",
+      "Same check for /products/manage, /products/show/{id}, /products/submit"
+    ]
+  },
+  {
+    "id": "SHOP-007",
+    "title": "No admin order list or order detail view",
+    "priority": "P1",
+    "type": "feature",
+    "status": "open",
+    "description": "There is no way for admin staff to view placed orders. products_orders and products_orders_items exist in the DB but are not exposed in the admin panel.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "Add orders() method: paginated table of products_orders using existing get_limit() / get_offset() / reduce_rows() helpers. Columns: ID, customer name, email, total, delivery, status, date. Add show_order($id) method: shows customer info + line items table from products_orders_items joined with products. Add corresponding view files: orders.php, show_order.php.",
+    "acceptance_criteria": [
+      "Admin navigates to /products/orders",
+      "Sees paginated list of all orders with status",
+      "Clicks an order — sees line items, customer info, delivery method",
+      "Can filter by status (pending / paid / failed)"
+    ]
+  },
+  {
+    "id": "SHOP-008",
+    "title": "No order confirmation email sent to customer",
+    "priority": "P1",
+    "type": "feature",
+    "status": "open",
+    "description": "After payment is confirmed, the customer receives no email. Brevo API is already configured in config/config.php (BREVO_API key present).",
+    "affected_files": [
+      "modules/products/controllers/Products.php",
+      "config/config.php"
+    ],
+    "implementation_notes": "In the shared _confirm_order($order_id) method (see SHOP-003), after updating order status to 'paid', POST to Brevo transactional email API. Email should contain: order ID, item list with quantities and prices, total, delivery method, and a thank-you message. Use the customer email from products_orders.",
+    "acceptance_criteria": [
+      "Complete a test order with a real email address",
+      "Verify email is received within 2 minutes",
+      "Email contains order ID, items, total, delivery info"
+    ]
+  },
+  {
+    "id": "SHOP-009",
+    "title": "Omniva parcel locker cache has no TTL — stale locker data",
+    "priority": "P1",
+    "type": "improvement",
+    "status": "open",
+    "description": "_get_omniva_lockers() writes omniva_cache.json on first call but never refreshes it. Parcel locker locations and names change; shoppers may see outdated options.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "In _get_omniva_lockers(), before returning cached data check filemtime of omniva_cache.json. If file is older than 86400 seconds (24 hours), re-fetch from Omniva API and overwrite the cache. If the API request fails and cache exists (even stale), return the stale cache. If no cache and API fails, return empty array and show a notice in checkout.",
+    "acceptance_criteria": [
+      "Set cache file mtime to 25 hours ago",
+      "Load checkout page — verify fresh data is fetched from Omniva API",
+      "Block Omniva API — verify checkout still loads using stale cache"
+    ]
+  },
+  {
+    "id": "SHOP-010",
+    "title": "Variant stock vs product stock — ambiguous source of truth",
+    "priority": "P1",
+    "type": "improvement",
+    "status": "open",
+    "description": "products.in_stock and products_variants.stock are separate columns. It is undefined which is authoritative when a product has variants. Cart capping (SHOP-002) and stock decrement (SHOP-001) will behave incorrectly without a clear rule.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "Establish and enforce: if a product has at least one active variant (products_variants where is_active=1), use products_variants.stock per variant as the source of truth. If no active variants, use products.in_stock. Apply this rule consistently in add_to_cart(), update_cart(), and stock decrement logic.",
+    "acceptance_criteria": [
+      "Product with variants: add size M to cart — qty capped to products_variants.stock for size M",
+      "Product without variants: qty capped to products.in_stock",
+      "After order confirmed: correct stock column is decremented"
+    ]
+  },
+  {
+    "id": "SHOP-011",
+    "title": "Price change between cart add and checkout not communicated to shopper",
+    "priority": "P1",
+    "type": "improvement",
+    "status": "open",
+    "description": "If a product price changes after a shopper adds it to cart, checkout() silently charges the new price with no notice. Shopper sees a different total than expected.",
+    "affected_files": [
+      "modules/products/controllers/Products.php",
+      "modules/products/views/checkout.php"
+    ],
+    "implementation_notes": "In checkout(), after fetching current DB prices, compare against any price stored in the session (if tracked) or simply display a notice: 'Prices have been updated since you added items to your cart.' Pass a $price_changed flag to the checkout view to conditionally render the notice.",
+    "acceptance_criteria": [
+      "Add product to cart at price 40",
+      "Change product price to 45 in admin",
+      "Load checkout page — verify a price-changed notice is shown",
+      "Total reflects the new price 45"
+    ]
+  },
+  {
+    "id": "SHOP-012",
+    "title": "EveryPay credentials stored in version-controlled config file",
+    "priority": "P2",
+    "type": "security",
+    "status": "open",
+    "description": "EVERYPAY_API_USERNAME and EVERYPAY_AUTH_KEY are committed to git in config/config.php. Currently demo keys, but the same file will hold production keys. If the repo is ever public or cloned, credentials are exposed.",
+    "affected_files": [
+      "config/config.php"
+    ],
+    "implementation_notes": "Move sensitive keys (EVERYPAY_AUTH_KEY, BREVO_API, ANTHROPIC_API_KEY) to a server environment variable or a gitignored secrets file (e.g. config/secrets.php included by config.php but listed in .gitignore). Replace hardcoded values with getenv() calls.",
+    "acceptance_criteria": [
+      "config/config.php committed to git contains no secret keys",
+      "Application still functions — keys loaded from environment or gitignored file",
+      "secrets file documented in README"
+    ]
+  },
+  {
+    "id": "SHOP-013",
+    "title": "No error handling if EveryPay API is unreachable during checkout",
+    "priority": "P2",
+    "type": "improvement",
+    "status": "open",
+    "description": "_get_everypay_link() uses raw curl_exec with no timeout or error check. If EveryPay is down, process_order() will silently fail or hang, leaving the shopper on a blank screen with an order created but no payment link.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "Add CURLOPT_TIMEOUT (10s) and CURLOPT_CONNECTTIMEOUT (5s) to the curl request. Check curl_errno() and http_response_code. If the request fails, do not insert the order — or mark it 'payment_failed' — and redirect back to checkout with a flash error: 'Payment service unavailable. Please try again.'",
+    "acceptance_criteria": [
+      "Simulate EveryPay API unavailability (block the URL or use wrong endpoint)",
+      "Submit checkout form",
+      "Verify user is redirected back to checkout with an error message",
+      "Verify no orphan order record is left in pending state"
+    ]
+  },
+  {
+    "id": "SHOP-014",
+    "title": "Controller too large — mix of admin, storefront, cart, and payment in one file",
+    "priority": "P2",
+    "type": "refactor",
+    "status": "open",
+    "description": "Products.php is 1114 lines covering admin CRUD, public product listing, cart management, checkout, and payment integration. This makes the file hard to navigate and increases the risk of unintended side-effects when editing.",
+    "affected_files": [
+      "modules/products/controllers/Products.php"
+    ],
+    "implementation_notes": "Extract DB queries into a Products_model.php (or use a separate Orders.php module for order management). At minimum, extract _get_everypay_link(), _get_omniva_lockers(), and the new _confirm_order() into private helper methods or a service file. Admin order methods (SHOP-007) could live in a separate Orders controller.",
+    "acceptance_criteria": [
+      "All existing routes continue to function after extraction",
+      "Main controller is under 600 lines",
+      "No logic duplication between files"
+    ]
+  },
+  {
+    "id": "SHOP-015",
+    "title": "Wishlist lost on cookie clear — no persistent storage for logged-in scenario",
+    "priority": "P2",
+    "type": "improvement",
+    "status": "open",
+    "description": "Wishlist is stored in a 30-day cookie, making it device-specific and easily lost. The trongate_users module exists but wishlist is not tied to any user account.",
+    "affected_files": [
+      "modules/products/controllers/Products.php",
+      "modules/products/views/wishlist.php"
+    ],
+    "implementation_notes": "For now, document the limitation. Future improvement: if user is authenticated, store wishlist in a products_wishlist (user_id, product_id) DB table and sync with cookie on login.",
+    "acceptance_criteria": [
+      "Wishlist cookie behaviour documented",
+      "No regression in current cookie wishlist behaviour"
+    ]
+  }
+]

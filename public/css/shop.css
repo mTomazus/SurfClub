@@ -222,6 +222,7 @@
 		.burger {
 			z-index: 5;
 			margin-inline: 1rem;
+			min-width: 52px;
 			& div {
 				width: 20px;
 				height: 3px;

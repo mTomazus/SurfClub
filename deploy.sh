@@ -31,10 +31,10 @@ rsync_up() {
 
 echo "→ Deploying to $HOST…"
 
-# CSS & assets
-rsync_up "public/css/"          "public/css/"
-rsync_up "public/js/"           "public/js/"
-rsync_up "public/images/"       "public/images/"
+# CSS & assets (public/ locally == public_html/ on Hostinger)
+rsync_up "public/css/"          "public_html/css/"
+rsync_up "public/js/"           "public_html/js/"
+rsync_up "public/images/"       "public_html/images/"
 
 # Templates
 rsync_up "templates/"           "templates/"

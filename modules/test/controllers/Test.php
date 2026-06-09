@@ -26,6 +26,291 @@ class Test extends Trongate {
 
     }
 
+    // Returns 4-day forecast JSON; cached 1 hour
+    public function surf_forecast(): void {
+        header('Content-Type: application/json');
+
+        $cache_file = sys_get_temp_dir() . '/molas_surf_forecast.json';
+        if (file_exists($cache_file) && (time() - filemtime($cache_file)) < 3600) {
+            echo file_get_contents($cache_file);
+            die();
+        }
+
+        $days = $this->_build_forecast_days();
+
+        if (!empty($days)) {
+            $ratings = $this->_ai_forecast_ratings($days);
+            foreach ($days as $i => &$day) {
+                $day['rating'] = $ratings[$i]['rating'] ?? 'nežinoma';
+                $day['badge']  = $ratings[$i]['label']  ?? '';
+            }
+            unset($day);
+        }
+
+        $result = ['days' => $days, 'fetched_at' => date('H:i')];
+        $json   = json_encode($result, JSON_UNESCAPED_UNICODE);
+        file_put_contents($cache_file, $json);
+        echo $json;
+        die();
+    }
+
+    private function _build_forecast_days(): array {
+        $marine  = $this->_curl_json(
+            'https://marine-api.open-meteo.com/v1/marine'
+            . '?latitude=55.73&longitude=21.1'
+            . '&hourly=wave_height,wave_period,wave_direction'
+            . '&forecast_days=4&timezone=Europe%2FVilnius'
+        );
+        $weather = $this->_curl_json(
+            'https://api.open-meteo.com/v1/forecast'
+            . '?latitude=55.73&longitude=21.1'
+            . '&hourly=wind_speed_10m,wind_direction_10m,temperature_2m'
+            . '&forecast_days=4&timezone=Europe%2FVilnius&wind_speed_unit=ms'
+        );
+
+        if (!$marine || !$weather) return [];
+
+        $mh = $marine['hourly'];
+        $wh = $weather['hourly'];
+
+        // Group hourly records by date
+        $by_date = [];
+        foreach ($mh['time'] as $i => $time) {
+            $date = substr($time, 0, 10);
+            $hour = (int)substr($time, 11, 2);
+            $by_date[$date][] = [
+                'hour'        => $hour,
+                'wave_height' => $mh['wave_height'][$i],
+                'wave_period' => $mh['wave_period'][$i],
+                'wind_speed'  => $wh['wind_speed_10m'][$i]    ?? null,
+                'wind_dir'    => $wh['wind_direction_10m'][$i] ?? null,
+                'temp'        => $wh['temperature_2m'][$i]     ?? null,
+            ];
+        }
+
+        $labels = ['Šiandien', 'Rytoj', 'Poryt'];
+        $days   = [];
+        $idx    = 0;
+
+        foreach ($by_date as $date => $all_hours) {
+            // Daytime slice 8–20 for stats; full 24h for sparkline
+            $day = array_values(array_filter($all_hours, fn($h) => $h['hour'] >= 8 && $h['hour'] <= 20));
+            if (empty($day)) $day = $all_hours;
+
+            $wave_h   = array_column($day, 'wave_height');
+            $wind_s   = array_column($day, 'wind_speed');
+            $wind_d   = array_column($day, 'wind_dir');
+            $temps    = array_column($day, 'temp');
+
+            // 2-hourly sparkline points (hours 6,8,10,12,14,16,18,20)
+            $spark = [];
+            foreach ($all_hours as $h) {
+                if ($h['hour'] >= 6 && $h['hour'] <= 20 && $h['hour'] % 2 === 0) {
+                    $spark[] = round($h['wave_height'], 2);
+                }
+            }
+
+            // Dominant wind direction (circular mean)
+            $dom_dir = null;
+            if (!empty($wind_d)) {
+                $sin = array_sum(array_map(fn($d) => sin(deg2rad($d)), $wind_d)) / count($wind_d);
+                $cos = array_sum(array_map(fn($d) => cos(deg2rad($d)), $wind_d)) / count($wind_d);
+                $dom_dir = $this->_deg_to_compass((float)rad2deg(atan2($sin, $cos)));
+            }
+
+            $days[] = [
+                'date'       => $date,
+                'label'      => $labels[$idx] ?? date('l', strtotime($date)),
+                'wave_min'   => round(min($wave_h), 1),
+                'wave_max'   => round(max($wave_h), 1),
+                'wave_period'=> round(array_sum(array_column($day, 'wave_period')) / count($day), 1),
+                'wind_avg'   => $wind_s ? round(array_sum($wind_s) / count($wind_s), 1) : null,
+                'wind_max'   => $wind_s ? round(max($wind_s), 1) : null,
+                'wind_dir'   => $dom_dir,
+                'temp_max'   => $temps ? (int)round(max($temps)) : null,
+                'spark'      => $spark,
+            ];
+            $idx++;
+        }
+
+        return $days;
+    }
+
+    private function _ai_forecast_ratings(array $days): array {
+        $lines = '';
+        foreach ($days as $i => $d) {
+            $lines .= 'Diena ' . ($i + 1) . " ({$d['date']}): "
+                . "bangos {$d['wave_min']}–{$d['wave_max']}m, "
+                . "periodas {$d['wave_period']}s, "
+                . "vėjas iki {$d['wind_max']}m/s iš {$d['wind_dir']}\n";
+        }
+
+        $n       = count($days);
+        $payload = json_encode([
+            'model'      => 'claude-haiku-4-5-20251001',
+            'max_tokens' => 220,
+            'system'     => "Tu esi banglenčių treneris prie Baltijos jūros Klaipėdoje. "
+                          . "Įvertink {$n} dienas ir grąžink TIKTAI JSON masyvą su {$n} objektais: "
+                          . '[{"rating":"puikios"|"geros"|"vidutinės"|"blogos","label":"iki 4 žodžių lt"},...]. '
+                          . 'Jokio kito teksto. Sąlygas vertink pagal bangų aukštį, periodą ir vėjo greitį/kryptį. Naudok kreipinius Serfingas ir serferis',
+            'messages'   => [['role' => 'user', 'content' => $lines]],
+        ]);
+
+        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'x-api-key: ' . constant('ANTHROPIC_API_KEY'),
+                'anthropic-version: 2023-06-01',
+            ],
+            CURLOPT_POSTFIELDS => $payload,
+        ]);
+        $raw = curl_exec($ch);
+        curl_close($ch);
+
+        if (!$raw) return [];
+        $api  = json_decode($raw, true);
+        $text = preg_replace('/```[a-z]*\n?|\n?```/', '', trim($api['content'][0]['text'] ?? '[]'));
+        return json_decode($text, true) ?? [];
+    }
+
+    private function _curl_json(string $url): ?array {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 8,
+        ]);
+        $raw = curl_exec($ch);
+        curl_close($ch);
+        if (!$raw) return null;
+        return json_decode($raw, true) ?: null;
+    }
+
+    private function _deg_to_compass(float $deg): string {
+        // Lithuanian: Š=North, R=East, P=South, V=West
+        $dirs = ['Š', 'ŠR', 'R', 'PR', 'P', 'PV', 'V', 'ŠV'];
+        return $dirs[((int)round(fmod($deg + 360, 360) / 45)) % 8];
+    }
+
+    // Returns JSON surf-condition rating; cached 15 min to spare APIs + AI cost
+    public function surf_rating(): void {
+        header('Content-Type: application/json');
+
+        $cache_file = sys_get_temp_dir() . '/molas_surf_rating.json';
+        $cache_ttl  = 900; // 15 minutes
+
+        if (file_exists($cache_file) && (time() - filemtime($cache_file)) < $cache_ttl) {
+            echo file_get_contents($cache_file);
+            die();
+        }
+
+        $wind_speed     = $this->_port_metric('wind_speed');
+        $wind_direction = $this->_port_metric('wind_direction');
+        $waves          = $this->_open_meteo_waves();
+
+        $result = $this->_ai_surf_rating($wind_speed, $wind_direction, $waves);
+        $result['fetched_at'] = date('H:i');
+
+        $json = json_encode($result);
+        file_put_contents($cache_file, $json);
+        echo $json;
+        die();
+    }
+
+    private function _port_metric(string $method): ?float {
+        $ch = curl_init('https://portofklaipeda.lt/wp-json/api/meteo_data?method=' . $method);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_TIMEOUT        => 6,
+        ]);
+        $raw = curl_exec($ch);
+        curl_close($ch);
+
+        if (!$raw) return null;
+        $rows = json_decode($raw, true);
+        if (!is_array($rows) || empty($rows)) return null;
+        $last = end($rows);
+        return isset($last[1]) ? round((float)$last[1], 1) : null;
+    }
+
+    private function _open_meteo_waves(): array {
+        // Melnragė: 55.73°N, 21.1°E
+        $url = 'https://marine-api.open-meteo.com/v1/marine'
+             . '?latitude=55.73&longitude=21.1'
+             . '&current=wave_height,wave_period,wave_direction,wind_wave_height,swell_wave_height'
+             . '&timezone=Europe%2FVilnius';
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 6]);
+        $raw = curl_exec($ch);
+        curl_close($ch);
+
+        if (!$raw) return [];
+        $data = json_decode($raw, true);
+        return $data['current'] ?? [];
+    }
+
+    private function _ai_surf_rating(?float $wind_speed, ?float $wind_direction, array $waves): array {
+        $wh = $waves['wave_height']       ?? null;
+        $wp = $waves['wave_period']       ?? null;
+        $wd = $waves['wave_direction']    ?? null;
+
+        $ctx = "Melnragė, Klaipėda — dabartinės sąlygos:\n";
+        if ($wind_speed     !== null) $ctx .= "- Vėjo greitis: {$wind_speed} m/s\n";
+        if ($wind_direction !== null) $ctx .= "- Vėjo kryptis: {$wind_direction}°\n";
+        if ($wh             !== null) $ctx .= "- Bangų aukštis: {$wh} m\n";
+        if ($wp             !== null) $ctx .= "- Bangų periodas: {$wp} s\n";
+        if ($wd             !== null) $ctx .= "- Bangų kryptis: {$wd}°\n";
+
+        $payload = json_encode([
+            'model'      => 'claude-haiku-4-5-20251001',
+            'max_tokens' => 120,
+            'system'     => 'Tu esi banglenčių treneris prie Baltijos jūros. '
+                          . 'Įvertink sąlygas ir atsakyk TIKTAI JSON: '
+                          . '{"rating":"puikios"|"geros"|"vidutinės"|"blogos","label":"iki 5 žodžių lietuviškai","advice":"vienas sakinys lietuviškai"}. '
+                          . 'Jokio kito teksto.',
+            'messages'   => [['role' => 'user', 'content' => $ctx]],
+        ]);
+
+        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'x-api-key: ' . constant('ANTHROPIC_API_KEY'),
+                'anthropic-version: 2023-06-01',
+            ],
+            CURLOPT_POSTFIELDS => $payload,
+        ]);
+        $raw = curl_exec($ch);
+        curl_close($ch);
+
+        $fallback = ['rating' => 'nežinoma', 'label' => 'Duomenys nepasiekiami', 'advice' => 'Susisiekite su klubu dėl sąlygų.'];
+        if (!$raw) return array_merge($fallback, compact('wind_speed', 'wind_direction') + ['wave_height' => $wh, 'wave_period' => $wp]);
+
+        $api  = json_decode($raw, true);
+        $text = $api['content'][0]['text'] ?? '{}';
+        // Strip any markdown fences the model might add
+        $text = preg_replace('/```[a-z]*\n?|\n?```/', '', trim($text));
+        $ai   = json_decode($text, true) ?? [];
+
+        return [
+            'rating'          => $ai['rating']  ?? $fallback['rating'],
+            'label'           => $ai['label']   ?? $fallback['label'],
+            'advice'          => $ai['advice']  ?? $fallback['advice'],
+            'wind_speed'      => $wind_speed,
+            'wind_direction'  => $wind_direction,
+            'wave_height'     => $wh,
+            'wave_period'     => $wp,
+        ];
+    }
+
     function baltija() {
         $data['view_file'] = 'baltija';
         $this->template('public', $data);

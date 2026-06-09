@@ -14,6 +14,7 @@ class Camps extends Trongate {
 
         $data['registrations'] = $this->get_all_registrations($show_only);
         $data['stats'] = $this->get_camp_stats();
+        $data['email_shift'] = $this->get_email_shift((int) segment(3));
 
         $data['view_file'] = 'reservations';
 
@@ -121,6 +122,143 @@ class Camps extends Trongate {
         }
 
         return $pamainos;
+    }
+
+    /**
+     * Build email-blast metadata for the currently selected shift.
+     *
+     * @param int $num Shift (pamaina) number from segment(3), 1–12.
+     * @return array|null Null when no shift is selected or it has no registrants.
+     */
+    private function get_email_shift(int $num): ?array {
+        if ($num < 1 || $num > 12) {
+            return null;
+        }
+
+        $rows = $this->get_shift_recipients($num, false);
+        if (empty($rows)) {
+            return null;
+        }
+
+        $sent_count = 0;
+        $last_sent = null;
+        foreach ($rows as $r) {
+            if (!empty($r->reminder_sent_at)) {
+                $sent_count++;
+                if ($last_sent === null || $r->reminder_sent_at > $last_sent) {
+                    $last_sent = $r->reminder_sent_at;
+                }
+            }
+        }
+
+        return [
+            'num' => $num,
+            'label' => $rows[0]->pamaina,
+            'recipient_count' => count($rows),
+            'sent_count' => $sent_count,
+            'last_sent' => $last_sent,
+        ];
+    }
+
+    /**
+     * Get registrants for a shift, matched by the leading "N. " in pamaina.
+     *
+     * @param int  $num         Shift number (1–12).
+     * @param bool $unsent_only When true, exclude rows already emailed.
+     * @return array Array of camp row objects (empty if none).
+     */
+    private function get_shift_recipients(int $num, bool $unsent_only = true): array {
+        $sql = "SELECT * FROM camps WHERE pamaina LIKE :prefix";
+        if ($unsent_only) {
+            $sql .= " AND reminder_sent_at IS NULL";
+        }
+        $sql .= " ORDER BY id";
+
+        $params = ['prefix' => $num . '. %']; // "2. %" matches shift 2 but not 12/20
+        $rows = $this->model->query_bind($sql, $params, 'object');
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    /**
+     * Send a Brevo transactional template to a single recipient.
+     *
+     * @param string $email       Recipient email.
+     * @param array  $params      Template merge params.
+     * @param int    $template_id Brevo template id.
+     * @return bool True on HTTP 2xx.
+     */
+    private function send_brevo_template(string $email, array $params, int $template_id): bool {
+        $curl = curl_init();
+
+        $data = [
+            "sender" => [
+                "name" => "VšĮ Banglentė",
+                "email" => "sales@banglente.com"
+            ],
+            "to" => [
+                ["email" => $email]
+            ],
+            "templateId" => $template_id,
+            "params" => $params
+        ];
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.brevo.com/v3/smtp/email",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_HTTPHEADER => [
+                "accept: application/json",
+                "api-key: ".constant('BREVO_API'),
+                "content-type: application/json"
+            ],
+            CURLOPT_POSTFIELDS => json_encode($data),
+        ]);
+
+        curl_exec($curl);
+        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        return $http_code >= 200 && $http_code < 300;
+    }
+
+    /**
+     * Send Brevo template 2 to every registrant of the selected shift.
+     * Admin-only. Returns the _send_result fragment for an MX swap.
+     */
+    public function send_shift_email(): void {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $num = (int) segment(3);
+        if ($num < 1 || $num > 12) {
+            http_response_code(400);
+            echo 'Invalid shift.';
+            return;
+        }
+
+        $resend = (post('resend') === '1');
+        $recipients = $this->get_shift_recipients($num, !$resend);
+
+        $sent = 0;
+        $failed = [];
+        foreach ($recipients as $r) {
+            $ok = $this->send_brevo_template($r->email, [
+                'name' => $r->name,
+                'pamaina' => $r->pamaina
+            ], 2);
+
+            if ($ok) {
+                $this->model->update($r->id, ['reminder_sent_at' => date('Y-m-d H:i:s')], 'camps');
+                $sent++;
+            } else {
+                $failed[] = $r->email;
+            }
+        }
+
+        $data['sent'] = $sent;
+        $data['failed'] = $failed;
+        $this->view('_send_result', $data);
     }
 
     /**           -----SOON----
