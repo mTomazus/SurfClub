@@ -10,7 +10,6 @@ $form_attr = [
     'autocomplete' => 'off',
     'mx-target' => '#information',
     'class' => 'highlight-errors',
-    'style' => 'grid-template-columns: 1fr;padding: 1rem 0;',
     'id' => 'lesson-form'
 ];
 
@@ -25,54 +24,38 @@ if (!isset($id)) {
     $start_time = '18:00';
     $reserved_places = 0;
     $available_places = 1;
-    echo form_dropdown('lesson_id', $options, '1');
+    $selected_lesson = '1';
 } else {
-    echo form_dropdown('lesson_id', $options, $lesson_id);
+    $selected_lesson = $lesson_id;
 }
-
 ?>
-
-<div class="flex-row justify-evenly">
-    <input type="date" name="date" class="date-picker" style="width:auto" value="<?= $date ?>" placeholder="Choose date here..." required />
-    <input type="time" name="start_time" style="width:auto" value="<?= out($start_time) ?>" class="time-picker" required />
+<div class="ls-form-grid">
+    <div class="ls-field ls-field--full">
+        <label for="ls-lesson">Lesson</label>
+        <?= form_dropdown('lesson_id', $options, $selected_lesson, ['id' => 'ls-lesson']) ?>
+    </div>
+    <div class="ls-field">
+        <label for="ls-date">Date</label>
+        <input type="date" id="ls-date" name="date" class="date-picker" value="<?= out($date ?? '') ?>" required />
+    </div>
+    <div class="ls-field">
+        <label for="ls-time">Start time</label>
+        <input type="time" id="ls-time" name="start_time" value="<?= out($start_time) ?>" class="time-picker" required />
+    </div>
+    <div class="ls-field">
+        <label for="ls-available">Available places</label>
+        <input type="number" id="ls-available" name="available_places" min="1" value="<?= out($available_places) ?>" required />
+    </div>
+    <div class="ls-field">
+        <label for="ls-reserved">Reserved places</label>
+        <input type="number" id="ls-reserved" name="reserved_places" min="0" value="<?= out($reserved_places) ?>" required />
+    </div>
 </div>
-<div class="flex-row justify-evenly"><div> 
-
 <?php
-
-$places_attr = [
-    'type' => 'number',
-    'placeholder' => 'Enter available places...',
-    'min' => 1,
-    'value' => 1,
-    'style' => 'margin:0 0 1rem;',
-];
-echo form_label('Available Places*');
-echo form_input('available_places', $available_places, $places_attr);
-
-?> </div><div> <?php
-
-$reserved_places_attr = [
-    'type' => 'number',
-    'placeholder' => 'Enter reserved places...',
-    'min' => 0,
-    'value' => 0,
-    'style' => 'margin:0 0 1rem;',
-];
-echo form_label('Reserved Places');
-echo form_input('reserved_places', $reserved_places, $reserved_places_attr);
-
-?> </div></div> <?php
-
-echo '<div class="d-flex justify-between">';
-$close_btn_attr = [
-   'class' => 'alt',
-   'onclick' => 'closeModal()'
-];
-echo form_button('close_btn', 'Close', $close_btn_attr);
-echo form_submit('submit', 'Submit', ['class' => 'success']);
+echo '<div class="ls-modal-btns">';
+echo form_button('close_btn', 'Cancel', ['class' => 'ls-btn-cancel', 'onclick' => 'closeModal()']);
+echo form_submit('submit', 'Save schedule', ['class' => 'ls-btn-save']);
 echo '</div>';
 echo form_close();
-
 ?>
 <script src="<?= BASE_URL ?>js/trongate-datetime.js"></script>

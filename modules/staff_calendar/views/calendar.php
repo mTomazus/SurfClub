@@ -124,7 +124,9 @@ $today_str     = date('Y-m-d');
 @keyframes sc-fade { from { opacity: 0; } }
 
 /* ── Wrapper ─────────────────────────────────────────────── */
-#sc-wrapper {
+/* Visual chrome lives on .sc-shell (inner div): Trongate MX strips the
+   outermost #sc-wrapper div when the sidebar swaps it into #form-container. */
+.sc-shell {
   margin: 0 0.9rem 1.5rem;
   padding: clamp(1.25rem, 2vw, 1.85rem);
   background: var(--sc-bg);
@@ -638,13 +640,15 @@ td.sc-cell:hover .sc-dot,  td.sc-cell:focus-within .sc-dot  { opacity: 0; }
 }
 @media (max-width: 33.75rem) {
   .sc-stats { grid-template-columns: repeat(2, 1fr); }
-  #sc-wrapper { padding: 1rem; border-radius: 12px; }
+  .sc-shell { padding: 1rem; border-radius: 12px; }
   .sc-table th.sc-name-col, .sc-table td.sc-name-cell { min-width: 138px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 </style>
+
+<div class="sc-shell">
 
 <!-- ===== HEADER ===== -->
 <div class="sc-head">
@@ -763,4 +767,5 @@ td.sc-cell:hover .sc-dot,  td.sc-cell:focus-within .sc-dot  { opacity: 0; }
 
 <?php endif; ?>
 
+</div><!-- /.sc-shell -->
 </div><!-- /#sc-wrapper -->

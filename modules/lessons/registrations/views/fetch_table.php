@@ -1,17 +1,17 @@
-<table style="background:transparent;">
+<table class="ls-reg-table">
     <thead>
         <tr>
             <th>#</th>
             <th>Name</th>
-            <th>Email/Phone</th>
+            <th>Contact</th>
         </tr>
     </thead>
-    <tbody class="text-center" style="font-weight: 900;">
+    <tbody>
         <?php $i = 1; foreach ($rows as $row): ?>
-            <tr style="background:transparent;">
-                <td><?= $i++ ?></td>
+            <tr>
+                <td class="ls-reg-num"><?= $i++ ?></td>
                 <td><?= out($row['name']) ?></td>
-                <td><?= out($row['email']) ?><br><?= out($row['phone']) ?></td>
+                <td><?= out($row['email']) ?><span class="ls-reg-sub"><?= out($row['phone']) ?></span></td>
             </tr>
         <?php endforeach; ?>
     </tbody>

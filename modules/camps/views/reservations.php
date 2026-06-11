@@ -195,7 +195,9 @@ $pamainos = [
 .cp-shift__full-label { color: var(--cp-full); font-weight: 700; }
 
 /* ── Main content ────────────────────────────────────────── */
-#nav-table {
+/* Visual chrome lives on .cp-shell (inner div): Trongate MX strips the
+   outermost #nav-table div when the sidebar swaps it into #form-container. */
+.cp-shell {
   margin: 0 0.9rem 1.5rem;
   padding: clamp(1.25rem, 2vw, 1.85rem);
   background: var(--cp-bg);
@@ -224,7 +226,7 @@ $pamainos = [
   text-transform: none;
 }
 
-#nav-table .table-responsive { margin: 0; overflow: visible; }
+.cp-shell .table-responsive { margin: 0; overflow: visible; }
 
 /* ── Filter pills ────────────────────────────────────────── */
 .cp-filter {
@@ -523,7 +525,7 @@ $pamainos = [
 }
 @media (max-width: 33.75rem) {
   .cp-stats { grid-template-columns: repeat(2, 1fr); }
-  #nav-table { padding: 1rem; border-radius: 12px; }
+  .cp-shell { padding: 1rem; border-radius: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
@@ -581,6 +583,7 @@ $pct_paid   = $total_all > 0 ? round($total_paid / $total_all * 100) : 0;
 
 <!-- ===== MAIN CONTENT ===== -->
 <div id="nav-table">
+<div class="cp-shell">
 
     <div class="cp-head">
         <p class="cp-eyebrow">Molas Surf Stovykla &middot; Sezonas 2026</p>
@@ -718,4 +721,5 @@ $pct_paid   = $total_all > 0 ? round($total_paid / $total_all * 100) : 0;
 
     </div><!-- /.table-responsive -->
 
+</div><!-- /.cp-shell -->
 </div><!-- /#nav-table -->

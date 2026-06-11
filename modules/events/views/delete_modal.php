@@ -4,18 +4,15 @@ $form_attr = [
     'mx-on-success' => '#events-container',
     'mx-close-on-success' => 'true',
     'mx-target' => '#information',
-    'style' => 'grid-template-columns: 1fr;padding: 1rem 0;',
     'id' => 'event-delete-form'
 ];
 echo form_open('#', $form_attr) ?>
-<p class="text-center xl">Are you sure?</p>
-<p>You are about to delete an Event.  This cannot be undone.  Do you really want to do this?</p> 
+<p class="ev-confirm-title">Delete this event?</p>
+<p class="ev-confirm-text">The event will be permanently removed. This cannot be undone.</p>
+<div class="ev-modal-btns">
 <?php
-$attr_close = array( 
-    "class" => "alt",
-    "onclick" => "closeModal()"
-);
-echo '<p style="display: flex;justify-content: space-around;">'.form_button('close', 'Cancel', $attr_close);
-echo form_submit('submit', 'Yes - Delete Now', array("class" => 'danger')).'</p>';
+echo form_button('close', 'Cancel', ['class' => 'ev-btn-cancel', 'onclick' => 'closeModal()']);
+echo form_submit('submit', 'Yes - Delete Now', ['class' => 'ev-btn-delete']);
+echo '</div>';
 echo form_close();
 ?>
