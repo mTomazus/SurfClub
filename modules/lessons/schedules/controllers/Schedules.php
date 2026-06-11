@@ -17,6 +17,9 @@ class Schedules extends Trongate {
     }
 
     public function lessons() {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
         $data['view_file'] = 'lessons_index';
         $sql = 'SELECT ls.id AS id, l.name, ls.date, ls.start_time, available_places, reserved_places
                 FROM lesson_schedules AS ls JOIN lessons AS l ON ls.lesson_id = l.id
