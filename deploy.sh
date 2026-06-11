@@ -42,8 +42,10 @@ rsync_up "templates/"           "templates/"
 # Modules
 rsync_up "modules/"             "modules/"
 
-# Config (skip sensitive files)
-rsync_up "config/"              "config/"
+# NOTE: config/ and engine/ are intentionally NOT deployed.
+# config/ holds environment-specific settings (BASE_URL, ENV, DB and
+# payment credentials) — syncing the local dev config would break
+# production. engine/ is the Trongate core and must stay untouched.
 
 rm -f "$PASSFILE"
 
