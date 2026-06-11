@@ -6,15 +6,29 @@
  * contexts: the template-rendered calendar.php (where $this is NOT the
  * controller) and the controller's MX response methods. Guarded against
  * double-definition because this file is required from several places.
+ *
+ * All colors live in the stylesheet (calendar.php) — helpers emit semantic
+ * classes only (.sc-chip--working etc.), never inline color values.
  */
 
 if (!function_exists('sc_status_meta')) {
     function sc_status_meta(): array {
         return [
-            'colors' => ['working' => '#27ae60', 'halfday' => '#e67e22', 'dayoff' => '#3498db', 'sick' => '#e74c3c'],
-            'icons'  => ['working' => '✓',        'halfday' => '½',        'dayoff' => '✕',        'sick' => '!'],
+            'icons'  => ['working' => '&#10003;', 'halfday' => '&#189;',   'dayoff' => '&#10005;', 'sick' => '!'],
             'labels' => ['working' => 'Working',  'halfday' => 'Half Day', 'dayoff' => 'Day Off',  'sick' => 'Sick'],
         ];
+    }
+}
+
+if (!function_exists('sc_initials')) {
+    /** Monogram initials: first letter of first + last word of the name. */
+    function sc_initials(string $name): string {
+        $parts = preg_split('/\s+/', trim($name)) ?: [];
+        $ini   = mb_strtoupper(mb_substr($parts[0] ?? '', 0, 1));
+        if (count($parts) > 1) {
+            $ini .= mb_strtoupper(mb_substr(end($parts), 0, 1));
+        }
+        return $ini !== '' ? $ini : '?';
     }
 }
 
@@ -25,7 +39,6 @@ if (!function_exists('sc_render_cell')) {
      */
     function sc_render_cell(array $d): string {
         $meta   = sc_status_meta();
-        $colors = $meta['colors'];
         $icons  = $meta['icons'];
         $labels = $meta['labels'];
 
@@ -34,6 +47,7 @@ if (!function_exists('sc_render_cell')) {
         $status    = $d['status'] ?? '';
         $notes     = $d['notes']  ?? '';
         $is_wkend  = !empty($d['is_wkend']);
+        $is_today  = ($date_str === date('Y-m-d'));
 
         $cell_id   = 'sc-cell-' . $member_id . '-' . $date_str;
         $rowtot_id = 'sc-rowtotal-' . $member_id;
@@ -51,7 +65,7 @@ if (!function_exists('sc_render_cell')) {
 
         $modal_cfg = htmlspecialchars(json_encode([
             'id'              => 'sc-modal',
-            'width'          => '360px',
+            'width'           => '360px',
             'modalHeading'    => 'Set Status',
             'showCloseButton' => 'true',
         ]), ENT_QUOTES);
@@ -60,21 +74,33 @@ if (!function_exists('sc_render_cell')) {
 
         $tip = $date_str . ($status ? ' — ' . $labels[$status] : '') . ($notes ? ': ' . $notes : '');
 
+        $td_class = 'sc-cell'
+                  . ($is_wkend ? ' sc-wkend-cell' : '')
+                  . ($is_today ? ' sc-today-cell' : '');
+
         ob_start();
         ?>
-<td id="<?= $cell_id ?>" class="sc-cell<?= $is_wkend ? ' sc-weekend-cell' : '' ?>" title="<?= htmlspecialchars($tip) ?>">
+<td id="<?= $cell_id ?>" class="<?= $td_class ?>" title="<?= htmlspecialchars($tip) ?>">
     <div class="sc-quick">
         <?php if ($status): ?>
-            <button type="button" class="sc-sq-btn" <?= $modal ?> title="Edit / add notes">
-                <span class="sc-status-sq" style="background:<?= $colors[$status] ?>"><?= $icons[$status] ?></span>
+            <button type="button" class="sc-chip-btn" <?= $modal ?>
+                    title="Edit / add notes" aria-label="Edit <?= $labels[$status] ?> on <?= $date_str ?>">
+                <span class="sc-chip sc-chip--<?= $status ?>"><?= $icons[$status] ?><?php if ($notes !== ''): ?><i class="sc-note-dot"></i><?php endif; ?></span>
             </button>
-            <button type="button" class="sc-q-btn sc-q-clear" title="Clear" <?= $mx ?> mx-vals='{"status":""}'>&#215;</button>
+            <button type="button" class="sc-x" title="Clear" aria-label="Clear status on <?= $date_str ?>"
+                    <?= $mx ?> mx-vals='{"status":""}'>&#215;</button>
         <?php else: ?>
-            <div class="sc-q-row">
-                <button type="button" class="sc-q-btn sc-q-work" title="Mark working" <?= $mx ?> mx-vals='{"status":"working"}'>&#10003;</button>
-                <button type="button" class="sc-q-btn sc-q-off" title="Mark day off" <?= $mx ?> mx-vals='{"status":"dayoff"}'>&#10007;</button>
+            <span class="sc-dot" aria-hidden="true"></span>
+            <div class="sc-acts">
+                <div class="sc-acts__row">
+                    <button type="button" class="sc-act sc-act--work" title="Mark working"
+                            aria-label="Mark working on <?= $date_str ?>" <?= $mx ?> mx-vals='{"status":"working"}'>&#10003;</button>
+                    <button type="button" class="sc-act sc-act--off" title="Mark day off"
+                            aria-label="Mark day off on <?= $date_str ?>" <?= $mx ?> mx-vals='{"status":"dayoff"}'>&#10005;</button>
+                </div>
+                <button type="button" class="sc-act sc-act--more" title="More options"
+                        aria-label="More options for <?= $date_str ?>" <?= $modal ?>>&#8943;</button>
             </div>
-            <button type="button" class="sc-q-more" title="More options" <?= $modal ?>>&#8943;</button>
         <?php endif; ?>
     </div>
 </td>
@@ -87,8 +113,9 @@ if (!function_exists('sc_render_row_total')) {
     function sc_render_row_total(int $member_id, float $total): string {
         $label = $total > 0
             ? ($total == floor($total) ? (string) (int) $total : number_format($total, 1))
-            : '—';
-        return '<td id="sc-rowtotal-' . $member_id . '" class="sc-total-col">' . $label . '</td>';
+            : '&mdash;';
+        return '<td id="sc-rowtotal-' . $member_id . '" class="sc-total-col'
+             . ($total > 0 ? '' : ' sc-total-col--zero') . '">' . $label . '</td>';
     }
 }
 
@@ -98,12 +125,18 @@ if (!function_exists('sc_render_stat_panel')) {
         ob_start();
         ?>
 <div id="stat-panel">
-    <div class="stat-card"><span class="stat-count" style="color:var(--sc-text)"><?= (int) $s['total_staff'] ?></span><span class="stat-label">Staff</span></div>
-    <div class="stat-card"><span class="stat-count" style="color:var(--clr-working)"><?= (int) $s['working'] ?></span><span class="stat-label">Working</span></div>
-    <div class="stat-card"><span class="stat-count" style="color:var(--clr-halfday)"><?= (int) $s['halfday'] ?></span><span class="stat-label">Half Days</span></div>
-    <div class="stat-card"><span class="stat-count" style="color:var(--clr-dayoff)"><?= (int) $s['dayoff'] ?></span><span class="stat-label">Days Off</span></div>
-    <div class="stat-card"><span class="stat-count" style="color:var(--clr-sick)"><?= (int) $s['sick'] ?></span><span class="stat-label">Sick</span></div>
-    <div class="stat-card"><span class="stat-count" style="color:var(--sc-text)"><?= (int) $s['coverage'] ?>%</span><span class="stat-label">Coverage</span></div>
+    <div class="sc-stats">
+        <div class="sc-stat sc-stat--lead">
+            <span class="sc-stat__label">Month coverage</span>
+            <span class="sc-stat__num"><?= (int) $s['coverage'] ?><small>%</small></span>
+            <span class="sc-stat__bar"><i style="width:<?= max(0, min(100, (int) $s['coverage'])) ?>%"></i></span>
+        </div>
+        <div class="sc-stat"><span class="sc-stat__num"><?= (int) $s['total_staff'] ?></span><span class="sc-stat__label">Staff</span></div>
+        <div class="sc-stat sc-stat--working"><span class="sc-stat__num"><?= (int) $s['working'] ?></span><span class="sc-stat__label">Working</span></div>
+        <div class="sc-stat sc-stat--halfday"><span class="sc-stat__num"><?= (int) $s['halfday'] ?></span><span class="sc-stat__label">Half days</span></div>
+        <div class="sc-stat sc-stat--dayoff"><span class="sc-stat__num"><?= (int) $s['dayoff'] ?></span><span class="sc-stat__label">Days off</span></div>
+        <div class="sc-stat sc-stat--sick"><span class="sc-stat__num"><?= (int) $s['sick'] ?></span><span class="sc-stat__label">Sick</span></div>
+    </div>
 </div>
         <?php
         return ob_get_clean();
