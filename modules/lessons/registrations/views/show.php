@@ -6,8 +6,8 @@
     </div>
     <div class="card-body">
         <?php 
-        echo anchor('lesson_registrations/manage', 'View All Lesson Registrations', array("class" => "button alt"));
-        echo anchor('lesson_registrations/create/'.$update_id, 'Update Details', array("class" => "button"));
+        echo anchor('lessons-registrations/manage', 'View All Lesson Registrations', array("class" => "button alt"));
+        echo anchor('lessons-registrations/create/'.$update_id, 'Update Details', array("class" => "button"));
         $attr_delete = array( 
             "class" => "danger go-right",
             "id" => "btn-delete-modal",
@@ -69,7 +69,7 @@
 <div class="modal" id="delete-modal" style="display: none;">
     <div class="modal-heading danger"><i class="fa fa-trash"></i> Delete Record</div>
     <div class="modal-body">
-        <?= form_open('lesson_registrations/submit_delete/'.$update_id) ?>
+        <?= form_open('lessons-registrations/submit_delete/'.$update_id) ?>
         <p>Are you sure?</p>
         <p>You are about to delete a lesson_registration record.  This cannot be undone.  Do you really want to do this?</p> 
         <?php 
