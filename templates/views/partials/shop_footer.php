@@ -1,5 +1,6 @@
+<?php $cart_count = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
 <div>
-    <?php 
+    <?php
         if (isset($token)) {
             echo anchor('members/logout', '<i class="fa fa-sign-out"></i>');
         } else {
@@ -14,5 +15,6 @@
                 "modalHeading": "Rašykite mums",
                 "max-width": "460px"
             }' mx-target="this" mx-select="#contact-form"><i class="fa fa-envelope"></i></a>
-    <a href="products/cart" aria-label="shopping cart"><i class="fa fa-shopping-basket"></i></a>
+    <a onclick="openCartDrawer()" href="javascript:void(0);" aria-label="shopping cart"><i class="fa fa-shopping-basket"></i><?php if ($cart_count): ?><span class="cart-count"><?= $cart_count ?></span><?php endif; ?>
+</a>
 </div>

@@ -31,6 +31,8 @@
 		--ring: 0 0 0 3px hsl(210 100% 56% / .4);
 		}
 		body {
+			padding: 0;
+			margin: 0;
 			box-sizing:border-box;
             color:var(--primary-darker);
 			font-family: "Didot", serif;
@@ -44,7 +46,7 @@
 			position: fixed;
 			height: 65px;
 			top: 0;
-			padding-block:0;
+			padding:0;
 			align-items:center;
 			background: transparent;
 			-webkit-backdrop-filter: blur(10px);
@@ -191,10 +193,10 @@
 			text-align: center;
 
 			position: absolute;
-			top: 0;
+			top: 65px;
 			width: 100%;
 			height: 100vh;
-			padding: 65px 0 55px 0;
+			padding: 1rem 0 55px 0;
 			
 			opacity: 1;
 			transform: translateX(-110%);
@@ -207,6 +209,9 @@
 			}
 			& ul {
 				margin: 2rem 0 0;
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				text-align: center;
 			}
 			& a {
 				text-decoration: none;
@@ -224,7 +229,7 @@
 			margin-inline: 1rem;
 			min-width: 52px;
 			& div {
-				width: 20px;
+				width: 25px;
 				height: 3px;
 				background-color: var(--primary-dark);
 				margin: 5px auto;
