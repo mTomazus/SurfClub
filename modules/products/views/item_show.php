@@ -19,12 +19,26 @@ foreach ($variants as $options) {
         }
     }
 }
+
+// Cover image + additional gallery pictures (uploaded via filezone)
+$gallery = $gallery ?? [];
+$thumbs = array_merge([$p->picture_path], $gallery);
 ?>
 
 <div class="item-wrap fade-up">
 
     <div class="item-gallery">
-        <img src="<?= $p->picture_path ?>" alt="<?= out($p->name) ?>" class="item-img">
+        <img src="<?= $p->picture_path ?>" alt="<?= out($p->name) ?>" class="item-img" id="item-main-img">
+
+        <?php if (count($thumbs) > 1): ?>
+        <div class="item-thumbs" id="item-thumbs">
+            <?php foreach ($thumbs as $i => $thumb_src): ?>
+            <button type="button" class="item-thumb<?= $i === 0 ? ' is-active' : '' ?>" data-src="<?= $thumb_src ?>" aria-label="<?= out($p->name) ?> nuotrauka <?= $i + 1 ?>">
+                <img src="<?= $thumb_src ?>" alt="" loading="lazy">
+            </button>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
 
     <div class="item-details">
@@ -111,6 +125,46 @@ foreach ($variants as $options) {
     display: block;
     border-radius: 2px;
     box-shadow: var(--shadow-md);
+}
+
+/* Thumbnail strip */
+.item-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.item-thumb {
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border: 1.5px solid hsl(220 14% 86%);
+    border-radius: 2px;
+    background: white;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+        border-color var(--dur-micro) var(--ease-out),
+        opacity var(--dur-micro) var(--ease-out);
+}
+
+.item-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.item-thumb:hover { border-color: var(--primary-darker); }
+
+.item-thumb.is-active {
+    border-color: var(--primary-darker);
+}
+
+.item-thumb:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
 }
 
 .item-details {
@@ -371,6 +425,18 @@ input[type="number"]::-webkit-inner-spin-button {
             r.addEventListener('change', function () {
                 if (this.dataset.vid) vidInput.value = this.dataset.vid;
             });
+        });
+    }
+
+    const thumbs = document.getElementById('item-thumbs');
+    const mainImg = document.getElementById('item-main-img');
+    if (thumbs && mainImg) {
+        thumbs.addEventListener('click', function (e) {
+            const btn = e.target.closest('.item-thumb');
+            if (!btn) return;
+            mainImg.src = btn.dataset.src;
+            thumbs.querySelectorAll('.item-thumb').forEach(function (t) { t.classList.remove('is-active'); });
+            btn.classList.add('is-active');
         });
     }
 })();

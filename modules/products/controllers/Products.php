@@ -59,14 +59,37 @@ class Products extends Trongate {
         $products = $this->model->query_bind($sql, [$product_id], 'object');
        
         if (!$products) {
-            // Handle the case where the product is not found
-            die('Product not found.');
+            $this->template('error_404');
+            return;
         }
     
         $data['products'] = $this->_add_picture_paths($products);
+        $data['gallery'] = $this->_get_gallery_images($product_id);
         $data['view_file'] = 'item_show';
 
         $this->template('shop_area', $data);
+    }
+
+    /**
+     * Build public URLs for a product's additional gallery pictures
+     * (uploaded via trongate_filezone). The single `image` column remains
+     * the cover/main picture; these are the extra shots shown as thumbnails.
+     */
+    private function _get_gallery_images(int $product_id): array {
+        $settings = $this->_init_filezone_settings();
+        $dir = APPPATH . 'modules/products/assets/' . $settings['destination'] . '/' . $product_id;
+
+        $urls = [];
+        if (is_dir($dir)) {
+            foreach (scandir($dir) as $file) {
+                if ($file === '.' || $file === '..' || $file === '.DS_Store' || $file === 'thumbnails') {
+                    continue;
+                }
+                $urls[] = BASE_URL . 'products_module/' . $settings['destination'] . '/' . $product_id . '/' . $file;
+            }
+        }
+
+        return $urls;
     }
 
     //-----------------------------------------------------------
@@ -77,17 +100,27 @@ class Products extends Trongate {
 
         // Handle single product object
         if (is_object($products)) {
-            $products->picture_path = BASE_URL . 'products_module/images/products_pics/' . $products->id . '/' . $products->image;
+            $products->picture_path = $this->_cover_path($products->id, $products->image ?? '');
             return $products;
         }
 
         // Handle array of products
         foreach($products as $key => $value) {
-            $picture_path = BASE_URL.'products_module/images/products_pics/'.$value->id.'/'.$value->image;
-            $products[$key]->picture_path = $picture_path;
+            $products[$key]->picture_path = $this->_cover_path($value->id, $value->image ?? '');
         }
 
         return $products;
+    }
+
+    /**
+     * Build a product's cover image URL, falling back to a placeholder when the
+     * product has no cover so the storefront never renders a broken <img>.
+     */
+    private function _cover_path($product_id, string $image): string {
+        if ($image === '') {
+            return BASE_URL . 'products_module/images/placeholder.svg';
+        }
+        return BASE_URL . 'products_module/images/products_pics/' . $product_id . '/' . rawurlencode($image);
     }
 
     function _get_omniva_lockers() {
@@ -282,13 +315,19 @@ class Products extends Trongate {
         $cart = $_SESSION['cart'] ?? [];
 
         if (empty($cart)) {
-            set_flashdata('error', 'Your cart is empty.');
+            set_flashdata('Jūsų krepšelis tuščias.');
             redirect('products/cart');
         }
-        
+
+        // Housekeeping: release checkouts that were started but never paid.
+        $this->_expire_stale_pending_orders();
+
         $this->validation->set_rules('customer_name', 'customer_name', 'required|min_length[4]|max_length[255]');
         $this->validation->set_rules('delivery', 'delivery', 'required');
-        $this->validation->set_rules('address', 'address', 'min_length[5]|max_length[255]');
+        if (post('delivery') === 'omniva') {
+            // Pickup point (ZIP) is mandatory for Omniva delivery.
+            $this->validation->set_rules('address', 'address', 'required|min_length[5]|max_length[255]');
+        }
         $this->validation->set_rules('phone', 'phone', 'required|min_length[8]|max_length[15]');
         $this->validation->set_rules('email', 'email', 'required|valid_email');
         $this->validation->set_rules('sutikimas', 'sutikimas', 'required');
@@ -296,6 +335,14 @@ class Products extends Trongate {
         $result = $this->validation->run();
 
         if ($result === true) {
+
+            // Re-check stock before taking payment — the cart may be stale or an
+            // item may have sold out since it was added.
+            $stock_errors = $this->_cart_stock_errors($cart);
+            if (!empty($stock_errors)) {
+                set_flashdata('Atnaujinkite krepšelį: ' . implode(' ', $stock_errors));
+                redirect('products/cart');
+            }
 
             $data['customer_name'] = post('customer_name', true);
             $data['phone'] = post('phone', true);
@@ -344,13 +391,68 @@ class Products extends Trongate {
                 redirect($payment_link);
 
             } else {
-                echo "Payment initialization failed.";
+                // Payment init failed — don't leave a dangling 'pending' order.
+                // Mark it failed and keep the cart so the customer can retry.
+                $this->model->update($order_id, ['status' => 'failed'], 'products_orders');
+                set_flashdata('Nepavyko inicijuoti mokėjimo. Bandykite dar kartą arba susisiekite su mumis.');
+                redirect('products/cart');
             }
 
         }
 
         $this->checkout();
 
+    }
+
+    /**
+     * Return human-readable messages for any cart line that exceeds available
+     * stock (variant stock when a variant is chosen, otherwise product stock).
+     */
+    private function _cart_stock_errors(array $cart): array {
+        $errors = [];
+
+        foreach ($cart as $product_id => $entry) {
+            $qty = is_array($entry) ? (int) ($entry['qty'] ?? 0) : (int) $entry;
+            $vid = is_array($entry) ? ($entry['variant_id'] ?? null) : null;
+            if ($qty < 1) {
+                continue;
+            }
+
+            $product = $this->model->get_where((int) $product_id, 'products');
+            $name = $product ? $product->name : ('#' . $product_id);
+
+            if ($vid) {
+                $variant = $this->model->get_one_where('id', (int) $vid, 'products_variants');
+                $available = ($variant && (int) $variant->is_active === 1) ? (int) $variant->stock : 0;
+                if ($variant) {
+                    $name .= ' (' . $variant->option_value . ')';
+                }
+            } else {
+                $available = $product ? (int) $product->in_stock : 0;
+            }
+
+            if ($qty > $available) {
+                $errors[] = ($available <= 0)
+                    ? $name . ' – nebėra sandėlyje.'
+                    : $name . ' – liko tik ' . $available . ' vnt.';
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Mark never-paid orders as cancelled after 24h so abandoned checkouts don't
+     * pile up as 'pending' forever. Runs opportunistically at checkout time.
+     */
+    private function _expire_stale_pending_orders(): void {
+        $this->model->query_bind(
+            "UPDATE products_orders
+             SET status = 'cancelled'
+             WHERE status = 'pending'
+             AND created_at < (NOW() - INTERVAL 24 HOUR)",
+            []
+        );
     }
 
     function payment() {
@@ -565,24 +667,39 @@ class Products extends Trongate {
         ];
     
         $ch = curl_init($everypay_url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Basic ' . base64_encode($api_username . ':' . $auth_key),
-            'Content-Type: application/json'
+        curl_setopt_array($ch, [
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Basic ' . base64_encode($api_username . ':' . $auth_key),
+                'Content-Type: application/json'
+            ],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
         ]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        $response = curl_exec($ch);
+        $response  = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_err  = curl_error($ch);
         curl_close($ch);
-    
+
         $result = json_decode($response, true);
-    
+
         if (isset($result['payment_link'])) {
             return $result['payment_link'];
-        } else {
-            // Optional debug log
-            // file_put_contents('everypay_errors.log', $response . PHP_EOL, FILE_APPEND);
-            return false;
         }
+
+        // Log why the link failed so production issues (rotated credentials,
+        // rejected customer_url, gateway downtime) are diagnosable instead of
+        // failing silently. The caller handles the false return gracefully.
+        error_log(sprintf(
+            'EveryPay link failed for ORDER-%s: http=%s curl_err=%s response=%s',
+            $order_id,
+            $http_code,
+            $curl_err !== '' ? $curl_err : 'none',
+            is_string($response) && $response !== '' ? $response : '(no body)'
+        ));
+
+        return false;
     }
 
     function thank_you() {
@@ -642,8 +759,9 @@ class Products extends Trongate {
 
         $update_id = (int) segment(3);
         $submit = post('submit');
+        $is_rerender = ($submit !== ''); // came back here from a failed submit()
 
-        if (($submit === '') && ($update_id>0)) {
+        if (!$is_rerender && $update_id > 0) {
             $data = $this->get_data_from_db($update_id);
         } else {
             $data = $this->get_data_from_post();
@@ -657,6 +775,20 @@ class Products extends Trongate {
         $data['category_options'] = $category_options;
 
         if ($update_id > 0) {
+            $data['headline'] = 'Update Product Record';
+            $data['cancel_url'] = BASE_URL.'products/show/'.$update_id;
+        } else {
+            $data['headline'] = 'Create New Product Record';
+            $data['cancel_url'] = BASE_URL.'products/manage';
+        }
+
+        // Categories + variants: repopulate from POST on a validation re-render so
+        // the admin's unsaved edits survive; otherwise load the saved record state.
+        if ($is_rerender) {
+            $posted_cats = post('categories');
+            $data['selected_categories'] = is_array($posted_cats) ? $posted_cats : [];
+            $data['variants'] = $this->_normalize_posted_variants(post('variants'));
+        } elseif ($update_id > 0) {
             $rows = $this->model->query_bind(
                 "SELECT category_id FROM products_items_categories WHERE product_id = ?",
                 [$update_id], 'object'
@@ -666,17 +798,18 @@ class Products extends Trongate {
                 $selected[] = $row->category_id;
             }
             $data['selected_categories'] = $selected;
-            $data['headline'] = 'Update Product Record';
-            $data['cancel_url'] = BASE_URL.'products/show/'.$update_id;
+            $data['variants'] = $this->model->query_bind(
+                "SELECT id, option_name, option_value, stock FROM products_variants WHERE product_id = ? ORDER BY id",
+                [$update_id], 'object'
+            ) ?: [];
         } else {
             $data['selected_categories'] = [];
-            $data['headline'] = 'Create New Product Record';
-            $data['cancel_url'] = BASE_URL.'products/manage';
+            $data['variants'] = [];
         }
 
         $data['form_location'] = BASE_URL.'products/submit/'.$update_id;
         $data['view_file'] = 'create';
-        $this->template('admin', $data);
+        $this->template('admin_area', $data);
     }
 
     // Display a webpage to manage records.
@@ -708,12 +841,42 @@ class Products extends Trongate {
         $pagination_data['include_showing_statement'] = true;
         $data['pagination_data'] = $pagination_data;
 
-        $data['rows'] = $this->reduce_rows($all_rows);
+        $data['rows'] = $this->_attach_categories($this->reduce_rows($all_rows));
         $data['selected_per_page'] = $this->get_selected_per_page();
         $data['per_page_options'] = $this->per_page_options;
         $data['view_module'] = 'products';
         $data['view_file'] = 'manage';
-        $this->template('admin', $data);
+        $this->template('admin_area', $data);
+    }
+
+    /**
+     * Attach category names to the given product rows for display in the
+     * manage table. Runs a single query for just the visible (paginated) rows.
+     */
+    private function _attach_categories(array $rows): array {
+        if (empty($rows)) {
+            return $rows;
+        }
+
+        $ids = array_map(static fn($r) => (int) $r->id, $rows);
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "SELECT pic.product_id, pc.name
+                FROM products_items_categories pic
+                JOIN products_categories pc ON pc.id = pic.category_id
+                WHERE pic.product_id IN ($placeholders)
+                ORDER BY pc.name";
+        $links = $this->model->query_bind($sql, $ids, 'object');
+
+        $by_product = [];
+        foreach ($links as $link) {
+            $by_product[(int) $link->product_id][] = $link->name;
+        }
+
+        foreach ($rows as $row) {
+            $row->categories = $by_product[(int) $row->id] ?? [];
+        }
+
+        return $rows;
     }
 
     public function orders(): void {
@@ -721,7 +884,7 @@ class Products extends Trongate {
         $this->trongate_security->_make_sure_allowed();
 
         $status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
-        $allowed_statuses = ['pending', 'paid', 'failed'];
+        $allowed_statuses = ['pending', 'paid', 'failed', 'cancelled'];
 
         if ($status_filter && in_array($status_filter, $allowed_statuses)) {
             $all_rows = $this->model->query_bind(
@@ -753,7 +916,7 @@ class Products extends Trongate {
         $data['status_filter'] = $status_filter;
         $data['view_module'] = 'products';
         $data['view_file'] = 'orders';
-        $this->template('admin', $data);
+        $this->template('admin_area', $data);
     }
 
     public function show_order(): void {
@@ -784,7 +947,7 @@ class Products extends Trongate {
         $data['headline'] = 'Order #' . $order_id;
         $data['view_module'] = 'products';
         $data['view_file'] = 'show_order';
-        $this->template('admin', $data);
+        $this->template('admin_area', $data);
     }
 
     // Display a webpage showing information for an individual record.
@@ -822,8 +985,9 @@ class Products extends Trongate {
 
             $data['update_id'] = $update_id;
             $data['headline'] = 'Product Information';
+            $data['filezone_settings'] = $this->_init_filezone_settings();
             $data['view_file'] = 'show';
-            $this->template('admin', $data);
+            $this->template('admin_area', $data);
         }
     }
 
@@ -839,7 +1003,15 @@ class Products extends Trongate {
         }
     
         $this->run_validation();
-    
+
+        // categories[] is an array field; the validation library's scalar rules
+        // can't handle it (required would trim() an array), so check it manually
+        // and push the error into the same store the library uses.
+        $categories = post('categories');
+        if (empty($categories) || !is_array($categories)) {
+            $this->validation->form_submission_errors['categories'][] = 'You must select at least one category.';
+        }
+
         if ($this->validation->run() === true) {
             $update_id = (int) segment(3);
             $data = $this->get_data_from_post();
@@ -868,7 +1040,9 @@ class Products extends Trongate {
         $this->validation->set_rules('description', 'description', 'required|min_length[2]');
         $this->validation->set_rules('short_desc', 'short_desc', 'max_length[255]');
         $this->validation->set_rules('price', 'price', 'required|greater_than[0]|numeric');
-        $this->validation->set_rules('discount_price', 'discount_price', 'greater_than[0]|numeric');
+        // discount_price is optional; 0 (or blank) means "no discount", so only
+        // require it to be numeric — greater_than[0] would reject the common 0 case.
+        $this->validation->set_rules('discount_price', 'discount_price', 'numeric');
         $this->validation->set_rules('in_stock', 'in_stock', 'required|integer');
         $this->validation->set_rules('status', 'status', 'required|min_length[2]|max_length[255]');
     }
@@ -895,45 +1069,101 @@ class Products extends Trongate {
         }
     }
 
+    /**
+     * Sync a product's variants against the posted variant rows.
+     * Updates existing rows (preserving each variant's stock), inserts new ones,
+     * and deletes only rows the admin removed in the form — so editing a product
+     * no longer wipes its variants. Posted ids are validated against this
+     * product's own variants to prevent cross-product tampering.
+     */
     private function save_product_variants(int $product_id): void {
         $variants = post('variants');
+
+        $existing = $this->model->query_bind(
+            "SELECT id FROM products_variants WHERE product_id = ?",
+            [$product_id], 'object'
+        ) ?: [];
+        $existing_ids = array_map(static fn($r) => (int) $r->id, $existing);
+
+        $kept_ids = [];
+
         if (!empty($variants) && is_array($variants)) {
-            $existing = $this->model->query_bind(
-                "SELECT option_name, option_value FROM products_variants WHERE product_id = ?",
-                [$product_id], 'object'
-            );
-            $existing_keys = [];
-            foreach ($existing as $row) {
-                $existing_keys[$row->option_name . ':' . $row->option_value] = true;
-            }
-            foreach ($variants as $variant) {
-                $variant = trim($variant);
-                if ($variant !== '' && strpos($variant, ':') !== false) {
-                    list($option, $value) = explode(':', $variant, 2);
-                    $key = trim($option) . ':' . trim($value);
-                    if (!isset($existing_keys[$key])) {
-                        $this->model->insert([
-                            'product_id'   => $product_id,
-                            'option_name'  => trim($option),
-                            'option_value' => trim($value),
-                            'is_active'    => 1
-                        ], 'products_variants');
-                    }
+            foreach ($variants as $row) {
+                if (!is_array($row)) {
+                    continue;
                 }
+                $option_name  = trim((string) ($row['option_name'] ?? ''));
+                $option_value = trim((string) ($row['option_value'] ?? ''));
+                $stock        = max(0, (int) ($row['stock'] ?? 0));
+                $vid          = (int) ($row['id'] ?? 0);
+
+                // option_name is constrained to the DB enum; skip blank/invalid rows.
+                if (!in_array($option_name, ['color', 'size'], true) || $option_value === '') {
+                    continue;
+                }
+
+                if ($vid > 0 && in_array($vid, $existing_ids, true)) {
+                    $this->model->update($vid, [
+                        'option_name'  => $option_name,
+                        'option_value' => $option_value,
+                        'stock'        => $stock,
+                    ], 'products_variants');
+                    $kept_ids[] = $vid;
+                } else {
+                    $kept_ids[] = $this->model->insert([
+                        'product_id'   => $product_id,
+                        'option_name'  => $option_name,
+                        'option_value' => $option_value,
+                        'stock'        => $stock,
+                        'is_active'    => 1,
+                    ], 'products_variants');
+                }
+            }
+        }
+
+        // Remove variants the admin deleted from the form.
+        foreach ($existing_ids as $eid) {
+            if (!in_array($eid, $kept_ids, true)) {
+                $this->model->query_bind("DELETE FROM products_variants WHERE id = ?", [$eid]);
             }
         }
     }
 
     private function update_product(int $id, array $data): void {
         $this->model->update($id, $data, 'products');
-    
-        // Clean up old links
-        $this->model->query_bind("DELETE FROM products_variants WHERE product_id = ?", [$id]);
+
+        // Category links are fully rebuilt by save_product_categories(); variants
+        // are synced in place by save_product_variants() (no blanket delete here,
+        // which previously wiped variants on every edit).
         $this->model->query_bind("DELETE FROM products_items_categories WHERE product_id = ?", [$id]);
     }
     
     private function create_product(array $data): int {
         return $this->model->insert($data, 'products');
+    }
+
+    /**
+     * Shape posted variant rows into objects matching the DB row format, so the
+     * create view can re-render the admin's variants after a failed validation.
+     */
+    private function _normalize_posted_variants($posted): array {
+        if (empty($posted) || !is_array($posted)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($posted as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $out[] = (object) [
+                'id'           => (int) ($row['id'] ?? 0),
+                'option_name'  => $row['option_name'] ?? '',
+                'option_value' => $row['option_value'] ?? '',
+                'stock'        => $row['stock'] ?? '',
+            ];
+        }
+        return $out;
     }
     // ------------------------------------------------------------------
     // ----------------------- SUBMIT END -------------------------------
@@ -1067,7 +1297,22 @@ class Products extends Trongate {
         return $data;
     }
 
-    function _init_picture_settings() { 
+    // Settings for the multi-picture gallery (trongate_filezone).
+    // The single `image` column stays the cover; these are extra pictures.
+    function _init_filezone_settings() {
+        $data['targetModule'] = 'products';
+        $data['destination'] = 'products_pictures';
+        $data['max_file_size'] = 1200;
+        $data['max_width'] = 1500;
+        $data['max_height'] = 1500;
+        $data['thumbnail_dir'] = 'thumbnails';
+        $data['thumbnail_max_width'] = 320;
+        $data['thumbnail_max_height'] = 320;
+        $data['upload_to_module'] = true;
+        return $data;
+    }
+
+    function _init_picture_settings() {
         $picture_settings['max_file_size'] = 2000;
         $picture_settings['max_width'] = 1500;
         $picture_settings['max_height'] = 2250;
