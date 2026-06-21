@@ -26,7 +26,7 @@ $cart_count = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 
 </div>
 
-<nav id="slide-nav" aria-label="Pagrindinis meniu" style="z-index:-1;">
+<nav id="slide-nav" aria-label="Pagrindinis meniu" style="z-index:0;">
     <div class="sh-slide__inner reveal">
         <p class="sh-slide__eyebrow" style="--i:0">Parduotuvė</p>
         <ul class="sh-slide__shop" style="--i:1">
@@ -95,6 +95,7 @@ $cart_count = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 
 /* ── Brand / wordmark ───────────────────────────────────── */
 .sh-brand {
+    flex: 1;
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
@@ -105,6 +106,8 @@ $cart_count = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 .sh-brand__mark { display: block; height: 34px; width: auto; margin-left: 0.5rem;}
 #header-lg .sh-brand__mark { height: 38px; }
 .sh-brand__word {
+    flex: 1;
+    text-align: center;
     font-family: "Baskervville", "Didot", serif;
     font-size: clamp(1.1rem, 2.4vw, 1.6rem);
     font-weight: 700;
@@ -113,7 +116,7 @@ $cart_count = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 }
 
 /* ── Desktop category nav ───────────────────────────────── */
-#header-lg #nav { margin: 0; }
+#header-lg #nav { margin: 0; flex: 1;}
 #top-nav {
     display: flex;
     align-items: center;
