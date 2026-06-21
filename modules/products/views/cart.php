@@ -20,7 +20,7 @@
                     $total += $subtotal;
                 ?>
                 <tr>
-                    <td><img src="<?= $product->picture_path ?>" alt="<?= $product->name ?>" class="product-small-image"><p><?= out($product->name) ?></p></td>
+                    <td><img src="<?= $product->picture_path ?>" alt="<?= $product->name ?>" class="product-small-image"><p><?= out($product->name) ?></p><?php if (!empty($product->variant_label)): ?><p class="cart-variant"><?= out($product->variant_label) ?></p><?php endif; ?></td>
                     <td>
                         <?php if ($product->discount_price > 0): ?>
                             <s><?= number_format($product->price, 2) ?></s> <?= number_format($product->discount_price, 2) ?>
@@ -118,6 +118,12 @@ table tfoot td {
 .product-small-image {
     float:left;
     max-height:90px;
+}
+.cart-variant {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    color: var(--clr-dark);
+    opacity: 0.8;
 }
 
 /* Buttons */

@@ -24,7 +24,7 @@
                         $total += $line_total;
                     ?>
                     <tr>
-                        <td><?= out($product->name) ?></td>
+                        <td><?= out($product->name) ?><?php if (!empty($product->variant_label)): ?><br><span class="checkout-variant"><?= out($product->variant_label) ?></span><?php endif; ?></td>
                         <td><?= $qty ?></td>
                         <td>€<?= number_format($effective_price, 2) ?></td>
                         <td>€<?= number_format($line_total, 2) ?></td>
@@ -159,6 +159,12 @@
 }
 
 .order-summary .total-label { text-align: right; }
+
+.checkout-variant {
+    font-size: 0.75rem;
+    color: var(--clr-dark);
+    opacity: 0.75;
+}
 
 .order-summary .button.alt {
     display: inline-block;

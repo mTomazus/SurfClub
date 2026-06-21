@@ -26,6 +26,9 @@ foreach ($cart as $entry) {
         <img src="<?= $product->picture_path ?>" alt="<?= out($product->name) ?>" class="drawer-item-img">
         <div class="drawer-item-info">
             <p class="drawer-item-name"><?= out($product->name) ?></p>
+            <?php if (!empty($product->variant_label)): ?>
+            <p class="drawer-item-variant" style="margin:0.1rem 0 0;font-size:0.72rem;color:var(--clr-dark,#555);opacity:0.75;"><?= out($product->variant_label) ?></p>
+            <?php endif; ?>
             <p class="drawer-item-price">
                 <?php if ($product->discount_price > 0): ?>
                     <s><?= number_format($product->price, 2) ?></s> <?= number_format($product->discount_price, 2) ?> €

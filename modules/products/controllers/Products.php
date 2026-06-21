@@ -2,7 +2,21 @@
 class Products extends Trongate {
 
     private $default_limit = 20;
-    private $per_page_options = array(10, 20, 50, 100); 
+    private $per_page_options = array(10, 20, 50, 100);
+
+    // Allowed admin order-status transitions (fulfillment workflow) and their
+    // button labels. Statuses not listed here (completed/failed/cancelled) are
+    // terminal and offer no further actions.
+    private $order_transitions = [
+        'pending' => ['cancelled'],
+        'paid'    => ['shipped', 'completed', 'cancelled'],
+        'shipped' => ['completed', 'cancelled'],
+    ];
+    private $order_status_actions = [
+        'shipped'   => 'Mark as shipped',
+        'completed' => 'Mark as completed',
+        'cancelled' => 'Cancel order',
+    ];
 
     //-----------------------------------------------------------
     //------------------- PRODUCT PAGES -------------------------
@@ -32,14 +46,24 @@ class Products extends Trongate {
             $this->template('error_404');
             return;
         }
-        $sql = "SELECT p.*
+        $sql = "SELECT p.*,
+                (SELECT COUNT(*) FROM products_variants v WHERE v.product_id = p.id AND v.is_active = 1) AS variant_count,
+                (SELECT COALESCE(SUM(v.stock), 0) FROM products_variants v WHERE v.product_id = p.id AND v.is_active = 1) AS variant_stock
                 FROM products p
                 JOIN products_items_categories pic ON p.id = pic.product_id
                 WHERE pic.category_id = ?
                 AND p.status = 'active'
                 ORDER BY p.id DESC";
-        $products = $this->model->query_bind($sql, [$category->id], 'object');
-        $data['products'] = $this->_add_picture_paths($products);
+        $products = $this->_add_picture_paths($this->model->query_bind($sql, [$category->id], 'object'));
+
+        // Availability: variant products are in stock if any active variant has
+        // stock; non-variant products use the product's own in_stock count.
+        foreach ($products as $p) {
+            $p->is_available = ((int) $p->variant_count > 0)
+                ? ((int) $p->variant_stock > 0)
+                : ((int) $p->in_stock > 0);
+        }
+        $data['products'] = $products;
         $data['page_title'] = $page_title;
         $data['view_module'] = 'products';
         $data['view_file'] = 'listing';
@@ -123,6 +147,26 @@ class Products extends Trongate {
         return BASE_URL . 'products_module/images/products_pics/' . $product_id . '/' . rawurlencode($image);
     }
 
+    /**
+     * Attach a human-readable variant label (e.g. "Size: M") to each cart
+     * product, based on the variant chosen for it in the cart session. Lets the
+     * cart / drawer / checkout show exactly which variant the customer picked.
+     */
+    private function _attach_variant_labels($products, array $cart) {
+        foreach ($products as $product) {
+            $entry = $cart[$product->id] ?? null;
+            $vid   = is_array($entry) ? ($entry['variant_id'] ?? null) : null;
+            $product->variant_label = '';
+            if ($vid) {
+                $variant = $this->model->get_one_where('id', (int) $vid, 'products_variants');
+                if ($variant) {
+                    $product->variant_label = ucfirst($variant->option_name) . ': ' . $variant->option_value;
+                }
+            }
+        }
+        return $products;
+    }
+
     function _get_omniva_lockers() {
 
         $cache_file = APPPATH . 'modules/products/assets/omniva_cache.json';
@@ -155,7 +199,8 @@ class Products extends Trongate {
     
         $product_ids = array_keys($cart);
         $products = $this->model->get_where_in('id', $product_ids, 'products');
-    
+        $products = $this->_attach_variant_labels($products, $cart);
+
         $data['cart'] = $cart;
         $data['products'] = $products;
 
@@ -267,6 +312,7 @@ class Products extends Trongate {
             $product_ids = array_keys($cart);
             $products = $this->model->get_where_in('id', $product_ids, 'products');
             $products = $this->_add_picture_paths($products);
+            $products = $this->_attach_variant_labels($products, $cart);
         }
         extract(['cart' => $cart, 'products' => $products]);
         include APPPATH . 'modules/products/views/cart_panel.php';
@@ -297,6 +343,7 @@ class Products extends Trongate {
         if (!empty($product_ids)) {
             $products = $this->model->get_where_in('id', $product_ids, 'products');
             $products = $this->_add_picture_paths($products);
+            $products = $this->_attach_variant_labels($products, $cart);
         }
 
         $data['cart'] = $cart;
@@ -884,11 +931,16 @@ class Products extends Trongate {
         $this->trongate_security->_make_sure_allowed();
 
         $status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
-        $allowed_statuses = ['pending', 'paid', 'failed', 'cancelled'];
+        $allowed_statuses = ['pending', 'paid', 'shipped', 'completed', 'failed', 'cancelled'];
 
-        if ($status_filter && in_array($status_filter, $allowed_statuses)) {
+        $totals_sql = "SELECT o.*,
+                (SELECT COALESCE(SUM(i.price * i.quantity), 0) FROM products_orders_items i WHERE i.order_id = o.id) AS total,
+                (SELECT COALESCE(SUM(i.quantity), 0) FROM products_orders_items i WHERE i.order_id = o.id) AS item_count
+                FROM products_orders o";
+
+        if ($status_filter && in_array($status_filter, $allowed_statuses, true)) {
             $all_rows = $this->model->query_bind(
-                "SELECT * FROM products_orders WHERE status = ? ORDER BY id DESC",
+                $totals_sql . " WHERE o.status = ? ORDER BY o.id DESC",
                 [$status_filter],
                 'object'
             );
@@ -896,11 +948,19 @@ class Products extends Trongate {
         } else {
             $status_filter = '';
             $all_rows = $this->model->query(
-                "SELECT * FROM products_orders ORDER BY id DESC",
+                $totals_sql . " ORDER BY o.id DESC",
                 'object'
             );
             $data['headline'] = 'Manage Orders';
         }
+
+        // Per-status counts for the filter chips.
+        $status_counts = [];
+        foreach ($this->model->query("SELECT status, COUNT(*) AS n FROM products_orders GROUP BY status", 'object') as $r) {
+            $status_counts[$r->status] = (int) $r->n;
+        }
+        $data['status_counts'] = $status_counts;
+        $data['allowed_statuses'] = $allowed_statuses;
 
         $pagination_data['total_rows'] = count($all_rows);
         $pagination_data['page_num_segment'] = 3;
@@ -934,9 +994,11 @@ class Products extends Trongate {
         }
 
         $items = $this->model->query_bind(
-            "SELECT p.name, p.image, i.quantity, i.price
+            "SELECT p.name, p.image, i.quantity, i.price, i.variant_id,
+                    v.option_name, v.option_value
              FROM products_orders_items i
              JOIN products p ON i.product_id = p.id
+             LEFT JOIN products_variants v ON v.id = i.variant_id
              WHERE i.order_id = ?",
             [$order_id],
             'object'
@@ -944,10 +1006,38 @@ class Products extends Trongate {
 
         $data['order'] = $order;
         $data['items'] = $items;
+        $data['allowed_transitions'] = $this->order_transitions[$order->status] ?? [];
+        $data['status_actions'] = $this->order_status_actions;
         $data['headline'] = 'Order #' . $order_id;
         $data['view_module'] = 'products';
         $data['view_file'] = 'show_order';
         $this->template('admin_area', $data);
+    }
+
+    // Advance an order through the fulfillment workflow (paid → shipped →
+    // completed, or cancel). Only transitions defined in $order_transitions
+    // are permitted, so terminal/invalid changes are rejected.
+    public function update_order_status(): void {
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $order_id   = (int) segment(3);
+        $new_status = post('status');
+
+        $order = $this->model->get_one_where('id', $order_id, 'products_orders');
+        if (!$order) {
+            redirect('products/orders');
+        }
+
+        $allowed = $this->order_transitions[$order->status] ?? [];
+        if (in_array($new_status, $allowed, true)) {
+            $this->model->update($order_id, ['status' => $new_status], 'products_orders');
+            set_flashdata('Order #' . $order_id . ' marked as ' . $new_status . '.');
+        } else {
+            set_flashdata('That status change is not allowed.');
+        }
+
+        redirect('products/show_order/' . $order_id);
     }
 
     // Display a webpage showing information for an individual record.
