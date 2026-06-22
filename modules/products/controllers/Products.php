@@ -618,6 +618,7 @@ class Products extends Trongate {
         }
 
         $this->_send_order_email($order_id);
+        $this->_send_admin_order_email($order_id);
     }
 
     private function _send_order_email(int $order_id): void {
@@ -626,6 +627,29 @@ class Products extends Trongate {
             return;
         }
 
+        $breakdown = $this->_order_items_html($order_id);
+
+        $delivery_label = ($order->delivery === 'omniva')
+            ? 'Omniva paštomatas: ' . htmlspecialchars($order->address)
+            : 'Atsiėmimas';
+
+        $html = '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;">'
+            . '<h2 style="color:#1a1a1a;">Ačiū už užsakymą, ' . htmlspecialchars($order->customer_name) . '!</h2>'
+            . '<p>Jūsų užsakymas <strong>#' . $order_id . '</strong> patvirtintas ir apmokėtas.</p>'
+            . $breakdown['table']
+            . '<p style="text-align:right;font-size:1.1em;"><strong>Viso: ' . number_format($breakdown['total'], 2) . ' &euro;</strong></p>'
+            . '<p><strong>Pristatymas:</strong> ' . $delivery_label . '</p>'
+            . '<p style="color:#555;">Klausimų? Rašykite: <a href="mailto:sales@surfclub.lt">sales@surfclub.lt</a></p>'
+            . '</body></html>';
+
+        $this->_send_brevo_email($order->email, $order->customer_name, 'Užsakymo patvirtinimas #' . $order_id, $html);
+    }
+
+    /**
+     * Build the shared order items table (HTML) + total, reused by the customer
+     * confirmation and the owner notification emails.
+     */
+    private function _order_items_html(int $order_id): array {
         $items = $this->model->query_bind(
             "SELECT p.name, i.quantity, i.price
              FROM products_orders_items i
@@ -636,11 +660,11 @@ class Products extends Trongate {
         );
 
         $total = 0;
-        $items_html = '';
+        $rows_html = '';
         foreach ($items as $item) {
             $line_total = $item->quantity * $item->price;
             $total += $line_total;
-            $items_html .= '<tr>'
+            $rows_html .= '<tr>'
                 . '<td style="padding:8px;border-bottom:1px solid #eee;">' . htmlspecialchars($item->name) . '</td>'
                 . '<td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">' . (int)$item->quantity . '</td>'
                 . '<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">' . number_format((float)$item->price, 2) . ' &euro;</td>'
@@ -648,28 +672,47 @@ class Products extends Trongate {
                 . '</tr>';
         }
 
-        $delivery_label = ($order->delivery === 'omniva')
-            ? 'Omniva paštomatas: ' . htmlspecialchars($order->address)
-            : 'Atsiėmimas';
-
-        $html = '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;">'
-            . '<h2 style="color:#1a1a1a;">Ačiū už užsakymą, ' . htmlspecialchars($order->customer_name) . '!</h2>'
-            . '<p>Jūsų užsakymas <strong>#' . $order_id . '</strong> patvirtintas ir apmokėtas.</p>'
-            . '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
+        $table = '<table style="width:100%;border-collapse:collapse;margin:16px 0;">'
             . '<thead><tr style="background:#f5f5f5;">'
             . '<th style="padding:8px;text-align:left;">Prekė</th>'
             . '<th style="padding:8px;text-align:center;">Kiekis</th>'
             . '<th style="padding:8px;text-align:right;">Kaina</th>'
             . '<th style="padding:8px;text-align:right;">Suma</th>'
             . '</tr></thead>'
-            . '<tbody>' . $items_html . '</tbody>'
-            . '</table>'
-            . '<p style="text-align:right;font-size:1.1em;"><strong>Viso: ' . number_format($total, 2) . ' &euro;</strong></p>'
+            . '<tbody>' . $rows_html . '</tbody>'
+            . '</table>';
+
+        return ['table' => $table, 'total' => $total];
+    }
+
+    /**
+     * Notify the shop (info@surfclub.lt) when a new paid order arrives, so it can
+     * be fulfilled. Sent alongside the customer confirmation from _confirm_order().
+     */
+    private function _send_admin_order_email(int $order_id): void {
+        $order = $this->model->get_one_where('id', $order_id, 'products_orders');
+        if (!$order) {
+            return;
+        }
+
+        $breakdown = $this->_order_items_html($order_id);
+
+        $delivery_label = ($order->delivery === 'omniva')
+            ? 'Omniva paštomatas: ' . htmlspecialchars($order->address)
+            : 'Atsiėmimas (Vėtros g. 8)';
+
+        $html = '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;">'
+            . '<h2 style="color:#1a1a1a;">Naujas užsakymas #' . $order_id . '</h2>'
+            . '<p><strong>Klientas:</strong> ' . htmlspecialchars($order->customer_name) . '<br>'
+            . '<strong>El. paštas:</strong> ' . htmlspecialchars($order->email) . '<br>'
+            . '<strong>Telefonas:</strong> ' . htmlspecialchars($order->phone) . '</p>'
+            . $breakdown['table']
+            . '<p style="text-align:right;font-size:1.1em;"><strong>Viso: ' . number_format($breakdown['total'], 2) . ' &euro;</strong></p>'
             . '<p><strong>Pristatymas:</strong> ' . $delivery_label . '</p>'
-            . '<p style="color:#555;">Klausimų? Rašykite: <a href="mailto:info@banglente.lt">info@banglente.lt</a></p>'
+            . '<p style="color:#555;"><a href="' . BASE_URL . 'products/show_order/' . $order_id . '">Peržiūrėti užsakymą valdymo skydelyje &rarr;</a></p>'
             . '</body></html>';
 
-        $this->_send_brevo_email($order->email, $order->customer_name, 'Užsakymo patvirtinimas #' . $order_id, $html);
+        $this->_send_brevo_email('info@surfclub.lt', 'Molas Surf Club', 'Naujas užsakymas #' . $order_id . ' – ' . $order->customer_name, $html);
     }
 
     /**
@@ -682,7 +725,7 @@ class Products extends Trongate {
         }
 
         $payload = [
-            'sender'      => ['name' => 'Banglente', 'email' => 'info@banglente.lt'],
+            'sender'      => ['name' => 'Molas Surf Club', 'email' => 'sales@surfclub.lt'],
             'to'          => [['email' => $to_email, 'name' => $to_name]],
             'subject'     => $subject,
             'htmlContent' => $html,
@@ -743,7 +786,7 @@ class Products extends Trongate {
             . '<p>Sveiki, ' . htmlspecialchars($order->customer_name) . '! Jūsų užsakymas <strong>#' . $order_id . '</strong> jau keliauja pas jus.</p>'
             . ($items_html !== '' ? '<ul style="padding-left:18px;color:#444;">' . $items_html . '</ul>' : '')
             . '<p>' . $delivery_line . '</p>'
-            . '<p style="color:#555;">Klausimų? Rašykite: <a href="mailto:info@banglente.lt">info@banglente.lt</a></p>'
+            . '<p style="color:#555;">Klausimų? Rašykite: <a href="mailto:sales@surfclub.lt">sales@surfclub.lt</a></p>'
             . '</body></html>';
 
         $this->_send_brevo_email($order->email, $order->customer_name, 'Jūsų užsakymas išsiųstas #' . $order_id, $html);
