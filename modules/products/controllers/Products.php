@@ -712,14 +712,20 @@ class Products extends Trongate {
             . '<p style="color:#555;"><a href="' . BASE_URL . 'products/show_order/' . $order_id . '">Peržiūrėti užsakymą valdymo skydelyje &rarr;</a></p>'
             . '</body></html>';
 
-        $this->_send_brevo_email('info@surfclub.lt', 'Molas Surf Club', 'Naujas užsakymas #' . $order_id . ' – ' . $order->customer_name, $html);
+        $this->_send_brevo_email(
+            'info@surfclub.lt',
+            'Molas Surf Club',
+            'Naujas užsakymas #' . $order_id . ' – ' . $order->customer_name,
+            $html,
+            ['email' => $order->email, 'name' => $order->customer_name]
+        );
     }
 
     /**
      * Send a transactional email via Brevo. Shared by the order-confirmation and
      * shipped-notification emails.
      */
-    private function _send_brevo_email(string $to_email, string $to_name, string $subject, string $html): void {
+    private function _send_brevo_email(string $to_email, string $to_name, string $subject, string $html, ?array $reply_to = null): void {
         if ($to_email === '') {
             return;
         }
@@ -730,6 +736,9 @@ class Products extends Trongate {
             'subject'     => $subject,
             'htmlContent' => $html,
         ];
+        if ($reply_to !== null) {
+            $payload['replyTo'] = $reply_to;
+        }
 
         $ch = curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch, [
