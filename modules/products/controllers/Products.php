@@ -669,10 +669,22 @@ class Products extends Trongate {
             . '<p style="color:#555;">Klausimų? Rašykite: <a href="mailto:info@banglente.lt">info@banglente.lt</a></p>'
             . '</body></html>';
 
+        $this->_send_brevo_email($order->email, $order->customer_name, 'Užsakymo patvirtinimas #' . $order_id, $html);
+    }
+
+    /**
+     * Send a transactional email via Brevo. Shared by the order-confirmation and
+     * shipped-notification emails.
+     */
+    private function _send_brevo_email(string $to_email, string $to_name, string $subject, string $html): void {
+        if ($to_email === '') {
+            return;
+        }
+
         $payload = [
             'sender'      => ['name' => 'Banglente', 'email' => 'info@banglente.lt'],
-            'to'          => [['email' => $order->email, 'name' => $order->customer_name]],
-            'subject'     => 'Užsakymo patvirtinimas #' . $order_id,
+            'to'          => [['email' => $to_email, 'name' => $to_name]],
+            'subject'     => $subject,
             'htmlContent' => $html,
         ];
 
@@ -691,6 +703,50 @@ class Products extends Trongate {
         ]);
         curl_exec($ch);
         curl_close($ch);
+    }
+
+    /**
+     * Notify the customer when their order is marked shipped (Omniva) or ready
+     * for pickup. Triggered from update_order_status().
+     */
+    private function _send_shipped_email(int $order_id): void {
+        $order = $this->model->get_one_where('id', $order_id, 'products_orders');
+        if (!$order || empty($order->email)) {
+            return;
+        }
+
+        $items = $this->model->query_bind(
+            "SELECT p.name, i.quantity
+             FROM products_orders_items i
+             JOIN products p ON i.product_id = p.id
+             WHERE i.order_id = ?",
+            [$order_id],
+            'object'
+        );
+        $items_html = '';
+        foreach ($items as $item) {
+            $items_html .= '<li style="margin:4px 0;">' . htmlspecialchars($item->name) . ' &times; ' . (int) $item->quantity . '</li>';
+        }
+
+        if ($order->delivery === 'omniva') {
+            $headline = 'Jūsų užsakymas išsiųstas!';
+            $delivery_line = 'Prekės pakeliui į Omniva paštomatą'
+                . (!empty($order->address) ? ': ' . htmlspecialchars($order->address) : '')
+                . '. Gausite Omniva pranešimą, kai siunta pasieks paštomatą.';
+        } else {
+            $headline = 'Jūsų užsakymas paruoštas atsiėmimui!';
+            $delivery_line = 'Prekes galite atsiimti adresu Vėtros g. 8, Klaipėda.';
+        }
+
+        $html = '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;">'
+            . '<h2 style="color:#1a1a1a;">' . $headline . '</h2>'
+            . '<p>Sveiki, ' . htmlspecialchars($order->customer_name) . '! Jūsų užsakymas <strong>#' . $order_id . '</strong> jau keliauja pas jus.</p>'
+            . ($items_html !== '' ? '<ul style="padding-left:18px;color:#444;">' . $items_html . '</ul>' : '')
+            . '<p>' . $delivery_line . '</p>'
+            . '<p style="color:#555;">Klausimų? Rašykite: <a href="mailto:info@banglente.lt">info@banglente.lt</a></p>'
+            . '</body></html>';
+
+        $this->_send_brevo_email($order->email, $order->customer_name, 'Jūsų užsakymas išsiųstas #' . $order_id, $html);
     }
 
     function _get_everypay_link($order_id, $total_amount) {
@@ -1045,7 +1101,12 @@ class Products extends Trongate {
         $allowed = $this->order_transitions[$order->status] ?? [];
         if (in_array($new_status, $allowed, true)) {
             $this->model->update($order_id, ['status' => $new_status], 'products_orders');
-            set_flashdata('Order #' . $order_id . ' marked as ' . $new_status . '.');
+            $msg = 'Order #' . $order_id . ' marked as ' . $new_status . '.';
+            if ($new_status === 'shipped') {
+                $this->_send_shipped_email($order_id);
+                $msg .= ' Customer notified by email.';
+            }
+            set_flashdata($msg);
         } else {
             set_flashdata('That status change is not allowed.');
         }
