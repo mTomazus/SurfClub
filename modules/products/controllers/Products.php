@@ -538,8 +538,9 @@ class Products extends Trongate {
             if ($vid) {
                 $variant = $this->model->get_one_where('id', (int) $vid, 'products_variants');
                 $available = ($variant && (int) $variant->is_active === 1) ? (int) $variant->stock : 0;
-                if ($variant) {
-                    $name .= ' (' . $variant->option_value . ')';
+                $vlabel = $this->_variant_options_label((int) $vid);
+                if ($vlabel !== '') {
+                    $name .= ' (' . $vlabel . ')';
                 }
             } else {
                 $available = $product ? (int) $product->in_stock : 0;
