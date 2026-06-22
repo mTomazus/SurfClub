@@ -19,7 +19,7 @@
                     <?php
                         $entry = $cart[$product->id];
                         $qty = is_array($entry) ? (int)($entry['qty'] ?? 0) : (int)$entry;
-                        $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
+                        $effective_price = $product->line_price ?? (($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price);
                         $line_total = $qty * $effective_price;
                         $total += $line_total;
                     ?>

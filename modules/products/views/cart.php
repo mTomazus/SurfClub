@@ -15,17 +15,17 @@
                     $pid = $product->id;
                     $entry = $cart[$pid];
                     $quantity = is_array($entry) ? (int)($entry['qty'] ?? 0) : (int)$entry;
-                    $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
+                    $effective_price = $product->line_price ?? (($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price);
                     $subtotal = $quantity * $effective_price;
                     $total += $subtotal;
                 ?>
                 <tr>
                     <td><img src="<?= $product->picture_path ?>" alt="<?= $product->name ?>" class="product-small-image"><p><?= out($product->name) ?></p><?php if (!empty($product->variant_label)): ?><p class="cart-variant"><?= out($product->variant_label) ?></p><?php endif; ?></td>
                     <td>
-                        <?php if ($product->discount_price > 0): ?>
-                            <s><?= number_format($product->price, 2) ?></s> <?= number_format($product->discount_price, 2) ?>
+                        <?php if ($effective_price < (float)$product->price): ?>
+                            <s><?= number_format($product->price, 2) ?></s> <?= number_format($effective_price, 2) ?>
                         <?php else: ?>
-                            <?= number_format($product->price, 2) ?>
+                            <?= number_format($effective_price, 2) ?>
                         <?php endif; ?>
                     </td>
                     <td>

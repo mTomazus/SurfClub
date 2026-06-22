@@ -1,28 +1,46 @@
 <?php
-$p = $products[0];
+$p = $product;
+$base_price   = ((float) $p->discount_price > 0) ? (float) $p->discount_price : (float) $p->price;
+$has_variants = !empty($variants);
 
-// Group variants by option_name
-$variants = [];
-foreach ($products as $row) {
-    if ($row->option_name !== null) {
-        $variants[$row->option_name][] = $row;
-    }
-}
-
-// Default selected variant: first non-OOS variant
-$default_variant_id = '';
-foreach ($variants as $options) {
-    foreach ($options as $opt) {
-        if ($opt->stock > 0) {
-            $default_variant_id = (int) $opt->variant_id;
-            break 2;
+// Axes: option name => [distinct values, first-seen order]
+$axes = [];
+foreach ($variants as $v) {
+    foreach ($v->options as $name => $val) {
+        if (!isset($axes[$name])) {
+            $axes[$name] = [];
+        }
+        if (!in_array($val, $axes[$name], true)) {
+            $axes[$name][] = $val;
         }
     }
 }
 
-// Cover image + additional gallery pictures (uploaded via filezone)
+// Default selection: first in-stock variant, else first variant
+$default = null;
+foreach ($variants as $v) {
+    if ((int) $v->stock > 0) { $default = $v; break; }
+}
+if (!$default && $has_variants) {
+    $default = $variants[0];
+}
+$default_opts  = $default ? $default->options : [];
+$default_vid   = $default ? (int) $default->id : '';
+$display_price = $default ? (float) $default->effective_price : $base_price;
+
+// Variant payload for client-side combo resolution
+$variants_js = [];
+foreach ($variants as $v) {
+    $variants_js[] = [
+        'id'    => (int) $v->id,
+        'stock' => (int) $v->stock,
+        'price' => round((float) $v->effective_price, 2),
+        'opts'  => (object) $v->options,
+    ];
+}
+
 $gallery = $gallery ?? [];
-$thumbs = array_merge([$p->picture_path], $gallery);
+$thumbs  = array_merge([$p->picture_path], $gallery);
 ?>
 
 <div class="item-wrap fade-up">
@@ -44,7 +62,7 @@ $thumbs = array_merge([$p->picture_path], $gallery);
     <div class="item-details">
 
         <h1 class="item-title"><?= out($p->name) ?></h1>
-        <p class="item-price">€<?= number_format($p->price, 2) ?></p>
+        <p class="item-price" id="item-price">&euro;<?= number_format($display_price, 2) ?></p>
 
         <?php if (!empty($p->short_desc)): ?>
         <p class="item-short-desc"><?= out($p->short_desc) ?></p>
@@ -52,30 +70,27 @@ $thumbs = array_merge([$p->picture_path], $gallery);
 
         <hr class="item-rule">
 
-        <?php foreach ($variants as $opt_name => $options): ?>
+        <?php foreach ($axes as $axis_name => $values): ?>
         <div class="variant-group">
-            <span class="variant-label"><?= ucfirst(out($opt_name)) ?></span>
-            <div class="variant-chips">
-                <?php foreach ($options as $i => $opt):
-                    $oos = ($opt->stock == 0);
+            <span class="variant-label"><?= ucfirst(out($axis_name)) ?></span>
+            <div class="variant-chips" data-axis="<?= out($axis_name) ?>">
+                <?php foreach ($values as $val):
+                    $checked = isset($default_opts[$axis_name]) && $default_opts[$axis_name] === $val;
                 ?>
-                <label class="variant-chip<?= $oos ? ' is-oos' : '' ?>">
-                    <input type="radio"
-                        name="variant_<?= out($opt_name) ?>"
-                        value="<?= out($opt->option_value) ?>"
-                        data-vid="<?= (int) $opt->variant_id ?>"
-                        <?= (!$oos && $i === 0) ? 'checked' : '' ?>
-                        <?= $oos ? 'disabled' : '' ?>>
-                    <?= out($opt->option_value) ?>
+                <label class="variant-chip">
+                    <input type="radio" name="axis_<?= out($axis_name) ?>" value="<?= out($val) ?>" <?= $checked ? 'checked' : '' ?>>
+                    <?= out($val) ?>
                 </label>
                 <?php endforeach; ?>
             </div>
         </div>
         <?php endforeach; ?>
 
+        <p class="item-availability" id="item-availability"></p>
+
         <form method="POST" action="<?= BASE_URL ?>products/add_to_cart" class="item-form">
             <input type="hidden" name="product_id" value="<?= $p->id ?>">
-            <input type="hidden" name="variant_id" id="selected-variant-id" value="<?= $default_variant_id ?>">
+            <input type="hidden" name="variant_id" id="selected-variant-id" value="<?= $default_vid ?>">
 
             <div class="quantity-controls">
                 <button type="button" aria-label="Mažiau"
@@ -85,7 +100,7 @@ $thumbs = array_merge([$p->picture_path], $gallery);
                     onclick="this.previousElementSibling.value=+this.previousElementSibling.value+1"><i class="fa fa-plus" aria-hidden="true"></i></button>
             </div>
 
-            <button type="submit" class="btn-add-cart">
+            <button type="submit" class="btn-add-cart" id="btn-add-cart">
                 <span>Į krepšelį</span>
                 <i class="fa fa-shopping-basket" aria-hidden="true"></i>
             </button>
@@ -242,7 +257,7 @@ $thumbs = array_merge([$p->picture_path], $gallery);
     & input[type="radio"] { display: none; }
 }
 
-.variant-chip:hover:not(.is-oos) {
+.variant-chip:hover {
     border-color: var(--primary-darker);
 }
 
@@ -252,10 +267,12 @@ $thumbs = array_merge([$p->picture_path], $gallery);
     color: hsl(0 0% 98%);
 }
 
-.variant-chip.is-oos {
-    opacity: 0.38;
-    cursor: not-allowed;
-    text-decoration: line-through;
+.item-availability {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--clr-dark);
+    margin: 0;
+    min-height: 1em;
 }
 
 /* Qty + cart form */
@@ -353,6 +370,15 @@ input[type="number"]::-webkit-inner-spin-button {
     box-shadow: var(--ring), var(--shadow-sm);
 }
 
+.btn-add-cart:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: var(--primary-darker);
+    transform: none;
+    box-shadow: none;
+}
+.btn-add-cart:disabled::after { display: none; }
+
 /* Description accordion */
 .item-desc {
     border-top: 1px solid hsl(220 14% 91%);
@@ -419,15 +445,59 @@ input[type="number"]::-webkit-inner-spin-button {
     const el = document.querySelector('.fade-up');
     if (el) requestAnimationFrame(() => el.classList.add('is-visible'));
 
+    // ── Multi-axis variant resolution ──────────────────────────
+    const VARIANTS = <?= json_encode($variants_js, JSON_UNESCAPED_UNICODE) ?>;
+    const hasVariants = VARIANTS.length > 0;
+    const priceEl = document.getElementById('item-price');
+    const availEl = document.getElementById('item-availability');
     const vidInput = document.getElementById('selected-variant-id');
-    if (vidInput) {
-        document.querySelectorAll('.variant-chip input[type="radio"]').forEach(function (r) {
-            r.addEventListener('change', function () {
-                if (this.dataset.vid) vidInput.value = this.dataset.vid;
-            });
+    const addBtn = document.getElementById('btn-add-cart');
+    const axisWraps = Array.from(document.querySelectorAll('.variant-chips[data-axis]'));
+    const axisNames = axisWraps.map(w => w.dataset.axis);
+    const fmt = n => '€' + Number(n).toFixed(2);
+
+    function selected() {
+        const sel = {};
+        axisWraps.forEach(w => {
+            const r = w.querySelector('input:checked');
+            if (r) sel[w.dataset.axis] = r.value;
         });
+        return sel;
     }
 
+    function matchVariant(sel) {
+        return VARIANTS.find(v => axisNames.every(a => v.opts[a] === sel[a]));
+    }
+
+    function update() {
+        if (!hasVariants) return;
+        const sel = selected();
+        if (!axisNames.every(a => sel[a] !== undefined)) {
+            vidInput.value = ''; addBtn.disabled = true;
+            availEl.textContent = 'Pasirinkite variantą';
+            return;
+        }
+        const v = matchVariant(sel);
+        if (!v) {
+            vidInput.value = ''; addBtn.disabled = true;
+            availEl.textContent = 'Šis derinys neprieinamas';
+            return;
+        }
+        priceEl.textContent = fmt(v.price);
+        vidInput.value = v.id;
+        if (v.stock > 0) {
+            addBtn.disabled = false;
+            availEl.textContent = v.stock <= 5 ? ('Liko: ' + v.stock + ' vnt.') : '';
+        } else {
+            addBtn.disabled = true;
+            availEl.textContent = 'Išparduota';
+        }
+    }
+
+    axisWraps.forEach(w => w.addEventListener('change', update));
+    update();
+
+    // ── Thumbnail swap ─────────────────────────────────────────
     const thumbs = document.getElementById('item-thumbs');
     const mainImg = document.getElementById('item-main-img');
     if (thumbs && mainImg) {
@@ -435,7 +505,7 @@ input[type="number"]::-webkit-inner-spin-button {
             const btn = e.target.closest('.item-thumb');
             if (!btn) return;
             mainImg.src = btn.dataset.src;
-            thumbs.querySelectorAll('.item-thumb').forEach(function (t) { t.classList.remove('is-active'); });
+            thumbs.querySelectorAll('.item-thumb').forEach(t => t.classList.remove('is-active'));
             btn.classList.add('is-active');
         });
     }

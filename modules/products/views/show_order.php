@@ -111,8 +111,8 @@ table.po-items tfoot td { padding:0.7rem 0.9rem; font-weight:700; border-top:1px
                 <tr>
                     <td>
                         <span class="po-item-name"><?= out($item->name) ?></span>
-                        <?php if (!empty($item->option_value)): ?>
-                            <br><span class="po-item-variant"><?= out(ucfirst($item->option_name)) ?>: <?= out($item->option_value) ?></span>
+                        <?php if (!empty($item->variant_label)): ?>
+                            <br><span class="po-item-variant"><?= out($item->variant_label) ?></span>
                         <?php endif; ?>
                     </td>
                     <td class="po-num po-money">&euro;<?= number_format((float) $item->price, 2) ?></td>

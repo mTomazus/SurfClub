@@ -18,7 +18,7 @@ foreach ($cart as $entry) {
     <?php foreach ($products as $product):
         $entry = $cart[$product->id];
         $qty = is_array($entry) ? (int)($entry['qty'] ?? 0) : (int)$entry;
-        $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
+        $effective_price = $product->line_price ?? (($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price);
         $subtotal = $qty * $effective_price;
         $total += $subtotal;
     ?>
@@ -30,10 +30,10 @@ foreach ($cart as $entry) {
             <p class="drawer-item-variant" style="margin:0.1rem 0 0;font-size:0.72rem;color:var(--clr-dark,#555);opacity:0.75;"><?= out($product->variant_label) ?></p>
             <?php endif; ?>
             <p class="drawer-item-price">
-                <?php if ($product->discount_price > 0): ?>
-                    <s><?= number_format($product->price, 2) ?></s> <?= number_format($product->discount_price, 2) ?> €
+                <?php if ($effective_price < (float)$product->price): ?>
+                    <s><?= number_format($product->price, 2) ?></s> <?= number_format($effective_price, 2) ?> €
                 <?php else: ?>
-                    <?= number_format($product->price, 2) ?> €
+                    <?= number_format($effective_price, 2) ?> €
                 <?php endif; ?>
             </p>
             <div class="drawer-qty-row">

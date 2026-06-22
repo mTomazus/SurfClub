@@ -229,7 +229,7 @@ $status_val = $status ?? 'active';
 .pr-variant-head,
 .pr-variant-row {
   display: grid;
-  grid-template-columns: 120px 1fr 100px 34px;
+  grid-template-columns: 1fr 84px 96px 120px 34px;
   gap: 0.5rem;
   align-items: center;
 }
@@ -379,21 +379,19 @@ $status_val = $status ?? 'active';
         <section class="pr-panel pr-span-2">
             <div class="pr-panel__head">Variants <span class="pr-opt">optional</span></div>
             <div class="pr-panel__body">
-                <p class="pr-hint">Add a row per option (e.g. <code>Size</code> &rarr; <code>M</code>) with its own stock. Each variant tracks stock separately from the product&rsquo;s base stock. Remove a row to delete that variant.</p>
+                <p class="pr-hint">One row per sellable combination (SKU). List its options as <code>name:value</code> pairs &mdash; e.g. <code>size:M, color:Black</code>. Each combo has its own stock; leave <strong>Price</strong> blank to inherit the product price, or set a per-combo price. Remove a row to delete that SKU.</p>
                 <div id="variants-container" class="pr-variants">
                     <?php if (!empty($variants)): ?>
                         <div class="pr-variant-head">
-                            <span>Option</span><span>Value</span><span>Stock</span><span></span>
+                            <span>Options (name:value, …)</span><span>Stock</span><span>Price &euro;</span><span>SKU</span><span></span>
                         </div>
                         <?php $i = 0; foreach ($variants as $v): ?>
                         <div class="pr-variant-row">
                             <input type="hidden" name="variants[<?= $i ?>][id]" value="<?= (int) ($v->id ?? 0) ?>">
-                            <select name="variants[<?= $i ?>][option_name]" class="pr-input">
-                                <option value="size"<?= ($v->option_name ?? '') === 'size' ? ' selected' : '' ?>>Size</option>
-                                <option value="color"<?= ($v->option_name ?? '') === 'color' ? ' selected' : '' ?>>Color</option>
-                            </select>
-                            <input type="text" name="variants[<?= $i ?>][option_value]" class="pr-input" value="<?= out((string) ($v->option_value ?? '')) ?>" placeholder="e.g. M / Black">
+                            <input type="text" name="variants[<?= $i ?>][options]" class="pr-input" value="<?= out((string) ($v->options_str ?? '')) ?>" placeholder="size:M, color:Black">
                             <input type="number" name="variants[<?= $i ?>][stock]" class="pr-input" value="<?= out((string) ($v->stock ?? '')) ?>" min="0" step="1" placeholder="0">
+                            <input type="number" name="variants[<?= $i ?>][price]" class="pr-input" value="<?= out($v->price !== null ? (string) $v->price : '') ?>" min="0" step="0.01" placeholder="base">
+                            <input type="text" name="variants[<?= $i ?>][sku]" class="pr-input" value="<?= out((string) ($v->sku ?? '')) ?>" placeholder="optional">
                             <button type="button" class="pr-variant-del" onclick="removeVariant(this)" aria-label="Remove variant" title="Remove variant">&times;</button>
                         </div>
                         <?php $i++; endforeach; ?>
@@ -424,7 +422,7 @@ function addVariant() {
     if (!c.querySelector(".pr-variant-head")) {
         const head = document.createElement("div");
         head.className = "pr-variant-head";
-        head.innerHTML = "<span>Option</span><span>Value</span><span>Stock</span><span></span>";
+        head.innerHTML = "<span>Options (name:value, …)</span><span>Stock</span><span>Price €</span><span>SKU</span><span></span>";
         c.appendChild(head);
     }
 
@@ -433,12 +431,10 @@ function addVariant() {
     row.className = "pr-variant-row";
     row.innerHTML =
         '<input type="hidden" name="variants[' + i + '][id]" value="0">' +
-        '<select name="variants[' + i + '][option_name]" class="pr-input">' +
-            '<option value="size">Size</option>' +
-            '<option value="color">Color</option>' +
-        '</select>' +
-        '<input type="text" name="variants[' + i + '][option_value]" class="pr-input" placeholder="e.g. M / Black">' +
+        '<input type="text" name="variants[' + i + '][options]" class="pr-input" placeholder="size:M, color:Black">' +
         '<input type="number" name="variants[' + i + '][stock]" class="pr-input" min="0" step="1" placeholder="0">' +
+        '<input type="number" name="variants[' + i + '][price]" class="pr-input" min="0" step="0.01" placeholder="base">' +
+        '<input type="text" name="variants[' + i + '][sku]" class="pr-input" placeholder="optional">' +
         '<button type="button" class="pr-variant-del" onclick="removeVariant(this)" aria-label="Remove variant" title="Remove variant">&times;</button>';
     c.appendChild(row);
     row.querySelector('input[type="text"]').focus();

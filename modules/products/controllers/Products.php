@@ -71,24 +71,26 @@ class Products extends Trongate {
     }
 
     public function item() {   // show item
-        $product_id = (int)segment(3);
+        $product_id = (int) segment(3);
 
-        $sql = "SELECT p.id, p.name, p.description, p.short_desc, p.price, p.discount_price, p.image,
-                v.id AS variant_id, v.option_name, v.option_value, v.stock
-                FROM products p
-                LEFT JOIN products_variants v ON p.id = v.product_id AND v.is_active = 1
-                WHERE p.id = ?
-                AND p.status = 'active'
-                ORDER BY v.id ASC";
-        $products = $this->model->query_bind($sql, [$product_id], 'object');
-       
-        if (!$products) {
+        $product = $this->model->query_bind(
+            "SELECT id, name, description, short_desc, price, discount_price, image
+             FROM products WHERE id = ? AND status = 'active' LIMIT 1",
+            [$product_id], 'object'
+        );
+
+        if (!$product) {
             $this->template('error_404');
             return;
         }
-    
-        $data['products'] = $this->_add_picture_paths($products);
-        $data['gallery'] = $this->_get_gallery_images($product_id);
+        $product = $product[0];
+        $this->_add_picture_paths($product);
+
+        $base_price = ((float) $product->discount_price > 0) ? (float) $product->discount_price : (float) $product->price;
+
+        $data['product']  = $product;
+        $data['variants'] = $this->_get_product_variants($product_id, $base_price);
+        $data['gallery']  = $this->_get_gallery_images($product_id);
         $data['view_file'] = 'item_show';
 
         $this->template('shop_area', $data);
@@ -155,16 +157,80 @@ class Products extends Trongate {
     private function _attach_variant_labels($products, array $cart) {
         foreach ($products as $product) {
             $entry = $cart[$product->id] ?? null;
-            $vid   = is_array($entry) ? ($entry['variant_id'] ?? null) : null;
-            $product->variant_label = '';
-            if ($vid) {
-                $variant = $this->model->get_one_where('id', (int) $vid, 'products_variants');
-                if ($variant) {
-                    $product->variant_label = ucfirst($variant->option_name) . ': ' . $variant->option_value;
-                }
-            }
+            $vid   = is_array($entry) ? (int) ($entry['variant_id'] ?? 0) : 0;
+            $base  = ((float) $product->discount_price > 0) ? (float) $product->discount_price : (float) $product->price;
+            $product->variant_label = $vid ? $this->_variant_options_label($vid) : '';
+            $product->line_price     = $this->_variant_unit_price($vid ?: null, $base);
         }
         return $products;
+    }
+
+    /**
+     * Human label for a variant's option combination, e.g. "Size: M, Color: Black".
+     */
+    private function _variant_options_label(int $variant_id): string {
+        $opts = $this->model->query_bind(
+            "SELECT name, value FROM products_variant_options WHERE variant_id = ? ORDER BY name",
+            [$variant_id], 'object'
+        ) ?: [];
+        $parts = [];
+        foreach ($opts as $o) {
+            $parts[] = ucfirst($o->name) . ': ' . $o->value;
+        }
+        return implode(', ', $parts);
+    }
+
+    /**
+     * Unit price for a cart/order line: the variant's own price when set,
+     * otherwise the product's effective (base/discount) price passed in.
+     */
+    private function _variant_unit_price(?int $variant_id, float $base_price): float {
+        if (!$variant_id) {
+            return $base_price;
+        }
+        $v = $this->model->get_one_where('id', $variant_id, 'products_variants');
+        if ($v && $v->price !== null && (float) $v->price > 0) {
+            return (float) $v->price;
+        }
+        return $base_price;
+    }
+
+    /**
+     * All active variants (SKUs) for a product, each with its option map
+     * (['size'=>'M','color'=>'Black']), effective price and a display label.
+     */
+    private function _get_product_variants(int $product_id, float $base_price): array {
+        $variants = $this->model->query_bind(
+            "SELECT id, stock, price, sku FROM products_variants WHERE product_id = ? AND is_active = 1 ORDER BY id",
+            [$product_id], 'object'
+        ) ?: [];
+        if (!$variants) {
+            return [];
+        }
+
+        $ids = array_map(static fn($v) => (int) $v->id, $variants);
+        $ph  = implode(',', array_fill(0, count($ids), '?'));
+        $opts = $this->model->query_bind(
+            "SELECT variant_id, name, value FROM products_variant_options WHERE variant_id IN ($ph) ORDER BY name",
+            $ids, 'object'
+        ) ?: [];
+
+        $by_variant = [];
+        foreach ($opts as $o) {
+            $by_variant[(int) $o->variant_id][$o->name] = $o->value;
+        }
+
+        foreach ($variants as $v) {
+            $v->options         = $by_variant[(int) $v->id] ?? [];
+            $v->effective_price = ($v->price !== null && (float) $v->price > 0) ? (float) $v->price : $base_price;
+            $parts = [];
+            foreach ($v->options as $n => $val) {
+                $parts[] = ucfirst($n) . ': ' . $val;
+            }
+            $v->label = implode(', ', $parts);
+        }
+
+        return $variants;
     }
 
     function _get_omniva_lockers() {
@@ -414,7 +480,8 @@ class Products extends Trongate {
                 $entry   = $cart[$product->id];
                 $qty     = is_array($entry) ? (int) $entry['qty'] : (int) $entry;
                 $vid     = is_array($entry) ? ($entry['variant_id'] ?? null) : null;
-                $effective_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
+                $base_price = ($product->discount_price > 0) ? (float)$product->discount_price : (float)$product->price;
+                $effective_price = $this->_variant_unit_price($vid ? (int) $vid : null, $base_price);
                 $total_amount += $effective_price * $qty;
                 $order_data = [
                     'order_id'   => $order_id,
@@ -966,10 +1033,14 @@ class Products extends Trongate {
                 $selected[] = $row->category_id;
             }
             $data['selected_categories'] = $selected;
-            $data['variants'] = $this->model->query_bind(
-                "SELECT id, option_name, option_value, stock FROM products_variants WHERE product_id = ? ORDER BY id",
+            $rows_v = $this->model->query_bind(
+                "SELECT id, stock, price, sku FROM products_variants WHERE product_id = ? ORDER BY id",
                 [$update_id], 'object'
             ) ?: [];
+            foreach ($rows_v as $rv) {
+                $rv->options_str = $this->_variant_options_str((int) $rv->id);
+            }
+            $data['variants'] = $rows_v;
         } else {
             $data['selected_categories'] = [];
             $data['variants'] = [];
@@ -1116,10 +1187,10 @@ class Products extends Trongate {
 
         $items = $this->model->query_bind(
             "SELECT p.name, p.image, i.quantity, i.price, i.variant_id,
-                    v.option_name, v.option_value
+                    (SELECT GROUP_CONCAT(CONCAT(UCASE(LEFT(vo.name,1)), SUBSTRING(vo.name,2), ': ', vo.value) ORDER BY vo.name SEPARATOR ', ')
+                     FROM products_variant_options vo WHERE vo.variant_id = i.variant_id) AS variant_label
              FROM products_orders_items i
              JOIN products p ON i.product_id = p.id
-             LEFT JOIN products_variants v ON v.id = i.variant_id
              WHERE i.order_id = ?",
             [$order_id],
             'object'
@@ -1308,41 +1379,86 @@ class Products extends Trongate {
                 if (!is_array($row)) {
                     continue;
                 }
-                $option_name  = trim((string) ($row['option_name'] ?? ''));
-                $option_value = trim((string) ($row['option_value'] ?? ''));
-                $stock        = max(0, (int) ($row['stock'] ?? 0));
-                $vid          = (int) ($row['id'] ?? 0);
 
-                // option_name is constrained to the DB enum; skip blank/invalid rows.
-                if (!in_array($option_name, ['color', 'size'], true) || $option_value === '') {
+                // A variant (SKU) is defined by its option combination, e.g.
+                // "size:M, color:Black". Skip rows with no valid options.
+                $options = $this->_parse_options_str((string) ($row['options'] ?? ''));
+                if (empty($options)) {
                     continue;
                 }
 
+                $stock = max(0, (int) ($row['stock'] ?? 0));
+                $price = trim((string) ($row['price'] ?? ''));
+                $price = ($price === '' || (float) $price <= 0) ? null : (float) $price;
+                $sku   = trim((string) ($row['sku'] ?? ''));
+                $sku   = ($sku === '') ? null : $sku;
+                $vid   = (int) ($row['id'] ?? 0);
+
+                $vdata = ['stock' => $stock, 'price' => $price, 'sku' => $sku];
+
                 if ($vid > 0 && in_array($vid, $existing_ids, true)) {
-                    $this->model->update($vid, [
-                        'option_name'  => $option_name,
-                        'option_value' => $option_value,
-                        'stock'        => $stock,
-                    ], 'products_variants');
-                    $kept_ids[] = $vid;
+                    $this->model->update($vid, $vdata, 'products_variants');
+                    $this->model->query_bind("DELETE FROM products_variant_options WHERE variant_id = ?", [$vid]);
                 } else {
-                    $kept_ids[] = $this->model->insert([
-                        'product_id'   => $product_id,
-                        'option_name'  => $option_name,
-                        'option_value' => $option_value,
-                        'stock'        => $stock,
-                        'is_active'    => 1,
-                    ], 'products_variants');
+                    $vdata['product_id'] = $product_id;
+                    $vdata['is_active']  = 1;
+                    $vid = $this->model->insert($vdata, 'products_variants');
                 }
+
+                foreach ($options as $name => $value) {
+                    $this->model->insert(
+                        ['variant_id' => $vid, 'name' => $name, 'value' => $value],
+                        'products_variant_options'
+                    );
+                }
+
+                $kept_ids[] = $vid;
             }
         }
 
-        // Remove variants the admin deleted from the form.
+        // Remove variants the admin deleted from the form (and their options).
         foreach ($existing_ids as $eid) {
             if (!in_array($eid, $kept_ids, true)) {
+                $this->model->query_bind("DELETE FROM products_variant_options WHERE variant_id = ?", [$eid]);
                 $this->model->query_bind("DELETE FROM products_variants WHERE id = ?", [$eid]);
             }
         }
+    }
+
+    /**
+     * Parse an editor option string ("size:M, color:Black") into
+     * ['size'=>'M','color'=>'Black']. Option names are lowercased so values like
+     * "Black" don't split a "color" axis into "Color" vs "color".
+     */
+    private function _parse_options_str(string $str): array {
+        $out = [];
+        foreach (explode(',', $str) as $pair) {
+            if (strpos($pair, ':') === false) {
+                continue;
+            }
+            [$name, $value] = explode(':', $pair, 2);
+            $name  = strtolower(trim($name));
+            $value = trim($value);
+            if ($name !== '' && $value !== '') {
+                $out[$name] = $value;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Render a variant's options back into the editor string format ("size:M, color:Black").
+     */
+    private function _variant_options_str(int $variant_id): string {
+        $opts = $this->model->query_bind(
+            "SELECT name, value FROM products_variant_options WHERE variant_id = ? ORDER BY name",
+            [$variant_id], 'object'
+        ) ?: [];
+        $parts = [];
+        foreach ($opts as $o) {
+            $parts[] = $o->name . ':' . $o->value;
+        }
+        return implode(', ', $parts);
     }
 
     private function update_product(int $id, array $data): void {
@@ -1373,10 +1489,11 @@ class Products extends Trongate {
                 continue;
             }
             $out[] = (object) [
-                'id'           => (int) ($row['id'] ?? 0),
-                'option_name'  => $row['option_name'] ?? '',
-                'option_value' => $row['option_value'] ?? '',
-                'stock'        => $row['stock'] ?? '',
+                'id'          => (int) ($row['id'] ?? 0),
+                'options_str' => (string) ($row['options'] ?? ''),
+                'stock'       => $row['stock'] ?? '',
+                'price'       => $row['price'] ?? '',
+                'sku'         => $row['sku'] ?? '',
             ];
         }
         return $out;
