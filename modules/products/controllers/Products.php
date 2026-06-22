@@ -784,10 +784,23 @@ class Products extends Trongate {
         if ($payment_state === 'settled') {
             $this->_confirm_order($order_id, $payment_ref);
         } else {
-            $this->model->update($order_id, [
-                'status'            => $payment_state,
-                'payment_reference' => $payment_ref,
-            ], 'products_orders');
+            // Map EveryPay payment states onto our own status enum. Writing the
+            // raw state (e.g. 'abandoned', 'voided', 'refunded') would be rejected
+            // by the enum and blank the order status. Unknown / in-progress states
+            // (e.g. 'initial') leave the status untouched and only record the ref.
+            $status_map = [
+                'failed'       => 'failed',
+                'abandoned'    => 'cancelled',
+                'voided'       => 'cancelled',
+                'cancelled'    => 'cancelled',
+                'refunded'     => 'cancelled',
+                'chargebacked' => 'cancelled',
+            ];
+            $update = ['payment_reference' => $payment_ref];
+            if (isset($status_map[$payment_state])) {
+                $update['status'] = $status_map[$payment_state];
+            }
+            $this->model->update($order_id, $update, 'products_orders');
         }
 
         http_response_code(200);
@@ -1533,7 +1546,7 @@ class Products extends Trongate {
             $reduce_width = true;
         }
 
-        if ((isset($max_height)) && ($tmp_file_width>$max_height)) {
+        if ((isset($max_height)) && ($tmp_file_height>$max_height)) {
             $reduce_height = true;
         }
 
