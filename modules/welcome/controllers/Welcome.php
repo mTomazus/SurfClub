@@ -123,7 +123,47 @@ class Welcome extends Trongate {
 		$this->template('public', $data);
 	}
 
-    function _init_picture_settings() { 
+	/**
+	 * Dynamic XML sitemap for search engines. Routed from /sitemap.xml via
+	 * config/custom_routing.php. Lists public marketing pages, the shop, every
+	 * product category and every active product.
+	 */
+	public function sitemap(): void {
+		$paths = [
+			'',                  // homepage
+			'pamokos',
+			'nuoma',
+			'varzybos',
+			'renginiai',
+			'komanda',
+			'parama',
+			'kontaktai',
+			'products',
+			'welcome/politika',
+			'welcome/taisykles',
+			'welcome/grazinimas',
+		];
+
+		$categories = $this->model->query("SELECT slug FROM products_categories ORDER BY id", 'object');
+		foreach ($categories as $cat) {
+			$paths[] = 'products/category/' . $cat->slug;
+		}
+
+		$products = $this->model->query("SELECT id FROM products WHERE status = 'active' ORDER BY id", 'object');
+		foreach ($products as $product) {
+			$paths[] = 'products/item/' . $product->id;
+		}
+
+		header('Content-Type: application/xml; charset=utf-8');
+		echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+		echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+		foreach ($paths as $path) {
+			echo '  <url><loc>' . htmlspecialchars(BASE_URL . $path, ENT_XML1, 'UTF-8') . '</loc></url>' . "\n";
+		}
+		echo '</urlset>';
+	}
+
+    function _init_picture_settings() {
         $picture_settings['max_file_size'] = 2000;
         $picture_settings['max_width'] = 1200;
         $picture_settings['max_height'] = 1200;

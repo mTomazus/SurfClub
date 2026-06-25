@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
 
-	<head><?= Template::partial('partials/shop_head') ?></head>
+	<head><?= Template::partial('partials/shop_head', $data) ?></head>
 
 	<body>
 

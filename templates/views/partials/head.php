@@ -3,8 +3,14 @@
 <meta name="abstract" content="Klaipėdos banglenčių mokykla Melnragėje prie pat Baltijos jūros. Išmokite plaukti banglente Baltijos vandenyse. Išsinomuokite banglentes ir pirmyn.">
 <meta name="google-site-verification" content="vI4-jaGremmKST9DX1EVLfkCVGlQsapPPlLqwrz7hJ4" />
 <meta name="author" content="VšĮ Banglentė">
-<meta name="description" content="Banglenčių sporto klubas - Molas surf club.">
-<meta http-equiv="Cache-control" content="no-cache">
+<?php
+    $page_description = (isset($meta_description) && $meta_description !== '')
+        ? $meta_description
+        : 'Banglenčių sporto klubas Molas – banglenčių nuoma, pamokos ir surf parduotuvė Klaipėdoje, Melnragėje.';
+?>
+<meta name="description" content="<?= out($page_description) ?>">
+<?php if (!empty($robots)): ?><meta name="robots" content="<?= out($robots) ?>">
+<?php endif; ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload stylesheet prefetch" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" as="style">
@@ -17,11 +23,19 @@
 <link rel="stylesheet" href="<?= BASE_URL ?>css/app.css">
 <link rel="stylesheet" href="<?= BASE_URL ?>css/public.css">
 <?php
-    $segment = segment(2);
-    if (strlen($segment) !== 0) {
-        $title = ucfirst(segment(2));
+    if (isset($meta_title) && strlen($meta_title) > 0) {
+        $title = $meta_title;
     } else {
-        $title = "Vasaros Stovykla";
+        $segment = segment(2);
+        $title = strlen($segment) !== 0 ? ucfirst($segment) : 'Vasaros Stovykla';
     }
+    $page_title = 'Molas Surf Club - ' . $title;
 ?>
-<title>Molas Surf Club - <?= $title ?></title>
+<title><?= out($page_title) ?></title>
+<?= Template::partial('partials/seo_meta', [
+    'page_title'       => $page_title,
+    'page_description' => $page_description,
+    'og_image'         => $og_image ?? null,
+    'og_type'          => $og_type ?? 'website',
+    'extra_json_ld'    => $json_ld ?? null,
+]) ?>

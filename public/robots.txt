@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Transactional / account pages — no SEO value, keep out of the index
+Disallow: /products/cart
+Disallow: /products/checkout
+Disallow: /products/process_order
+Disallow: /products/payment
+Disallow: /products/payment_result
+Disallow: /products/thank_you
+Disallow: /products/wishlist
+Disallow: /products/add_to_cart
+Disallow: /products/update_cart
+Disallow: /products/remove_from_cart
+
+Sitemap: https://www.surfclub.lt/welcome/sitemap

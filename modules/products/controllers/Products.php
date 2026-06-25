@@ -65,6 +65,7 @@ class Products extends Trongate {
         }
         $data['products'] = $products;
         $data['page_title'] = $page_title;
+        $data['meta_title'] = $page_title;
         $data['view_module'] = 'products';
         $data['view_file'] = 'listing';
         $this->template('shop_area', $data);
@@ -74,7 +75,7 @@ class Products extends Trongate {
         $product_id = (int) segment(3);
 
         $product = $this->model->query_bind(
-            "SELECT id, name, description, short_desc, price, discount_price, image
+            "SELECT id, name, description, short_desc, price, discount_price, image, in_stock
              FROM products WHERE id = ? AND status = 'active' LIMIT 1",
             [$product_id], 'object'
         );
@@ -91,6 +92,38 @@ class Products extends Trongate {
         $data['product']  = $product;
         $data['variants'] = $this->_get_product_variants($product_id, $base_price);
         $data['gallery']  = $this->_get_gallery_images($product_id);
+
+        $data['meta_title'] = $product->name;
+        $desc = trim(strip_tags((string) ($product->short_desc ?: $product->description)));
+        if ($desc !== '') {
+            $data['meta_description'] = mb_substr($desc, 0, 155);
+        }
+
+        // Social sharing + Product structured data (rich results / Google Shopping).
+        $variant_stock = array_sum(array_map(static fn($v) => (int) $v->stock, $data['variants']));
+        $in_stock = !empty($data['variants']) ? $variant_stock > 0 : (int) $product->in_stock > 0;
+
+        $data['og_image'] = $product->picture_path;
+        $data['og_type']  = 'product';
+        $data['json_ld']  = [
+            '@context'    => 'https://schema.org',
+            '@type'       => 'Product',
+            'name'        => $product->name,
+            'image'       => $product->picture_path,
+            'description' => $desc,
+            'url'         => BASE_URL . 'products/item/' . $product->id,
+            'brand'       => ['@type' => 'Brand', 'name' => 'Molas Surf Club'],
+            'offers'      => [
+                '@type'         => 'Offer',
+                'price'         => number_format($base_price, 2, '.', ''),
+                'priceCurrency' => 'EUR',
+                'availability'  => $in_stock
+                    ? 'https://schema.org/InStock'
+                    : 'https://schema.org/OutOfStock',
+                'url'           => BASE_URL . 'products/item/' . $product->id,
+            ],
+        ];
+
         $data['view_file'] = 'item_show';
 
         $this->template('shop_area', $data);
@@ -267,6 +300,7 @@ class Products extends Trongate {
         $products = $this->model->get_where_in('id', $product_ids, 'products');
         $products = $this->_attach_variant_labels($products, $cart);
 
+        $data['robots'] = 'noindex, follow';
         $data['cart'] = $cart;
         $data['products'] = $products;
 
@@ -393,8 +427,9 @@ class Products extends Trongate {
     }
 
     public function cart() {
-        
+
         $cart = $_SESSION['cart'] ?? [];
+        $data['robots'] = 'noindex, follow';
 
         if (empty($cart)) {
             $data['view_file'] = 'cart';
@@ -585,7 +620,8 @@ class Products extends Trongate {
 
         // Get the EveryPay iframe URL
         $data['payment_link'] = $_SESSION['payment_link'] ?? null;
-    
+
+        $data['robots'] = 'noindex, follow';
         $data['view_file'] = 'payment_page';
         $this->template('shop_area', $data);
     }
@@ -926,6 +962,7 @@ class Products extends Trongate {
     }
 
     function thank_you() {
+        $data['robots'] = 'noindex, follow';
         $data['view_file'] = 'thankyou';
         $this->template('shop_area', $data);
     }
@@ -1897,7 +1934,8 @@ class Products extends Trongate {
         } else {
             $data['products'] = $this->model->get_where_in('id', $ids, 'products');
         }
-    
+
+        $data['robots'] = 'noindex, follow';
         $data['view_module'] = 'products';
         $data['view_file'] = 'wishlist';
         $this->template('shop_area', $data);

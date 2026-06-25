@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
 
-<head><?= Template::partial('partials/head') ?></head>
+<head><?= Template::partial('partials/head', $data) ?></head>
 <body>
 	
 	<header>
